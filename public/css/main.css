@@ -33,8 +33,9 @@ a { color: inherit; }
 }
 .navbar.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.08); }
 .nav-inner { max-width: 1280px; margin: 0 auto; height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; gap: 2rem; }
-.nav-logo { display: flex; align-items: center; gap: 0.5rem; font-size: 1.25rem; font-weight: 700; color: var(--primary); text-decoration: none; letter-spacing: -0.02em; }
-.logo-icon { font-size: 1.1rem; }
+.nav-logo { display: flex; align-items: center; text-decoration: none; }
+.logo-img { height: 48px; width: 48px; border-radius: 50%; object-fit: cover; display: block; }
+.logo-img-footer { height: 52px; width: 52px; border-radius: 50%; object-fit: cover; display: block; }
 .nav-links { display: flex; gap: 0.25rem; list-style: none; }
 .nav-links a { padding: 0.5rem 0.9rem; border-radius: 100px; font-size: 0.88rem; font-weight: 500; color: var(--text); text-decoration: none; transition: background 0.2s, color 0.2s; }
 .nav-links a:hover, .nav-links a.active { background: var(--bg-gray); color: var(--dark); }
@@ -277,6 +278,25 @@ h2 { font-size: clamp(1.8rem, 3.5vw, 2.8rem); font-weight: 700; color: var(--dar
 .lb-prev { left: 1.5rem; }
 .lb-next { right: 1.5rem; }
 .lb-counter { position: absolute; bottom: 1.5rem; left: 50%; transform: translateX(-50%); font-size: 0.82rem; color: rgba(255,255,255,0.6); background: rgba(0,0,0,0.4); padding: 0.3rem 0.8rem; border-radius: 100px; }
+
+/* ── SOCIAL STRIP ── */
+.social-strip { background: var(--bg-gray); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 1.25rem 0; }
+.social-strip-inner { display: flex; align-items: center; justify-content: center; gap: 2rem; flex-wrap: wrap; }
+.social-strip-text { font-size: 0.82rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
+.social-strip-links { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+.social-strip-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.1rem; border-radius: 100px; font-size: 0.82rem; font-weight: 600; text-decoration: none; transition: opacity 0.2s, transform 0.2s; white-space: nowrap; }
+.social-strip-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.airbnb-btn   { background: #FF385C; color: #fff; }
+.instagram-btn { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: #fff; }
+.tiktok-btn   { background: #010101; color: #fff; }
+
+/* ── FOOTER SOCIALS ── */
+.footer-socials { display: flex; gap: 0.6rem; margin-top: 1.25rem; }
+.social-link { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s, transform 0.2s; flex-shrink: 0; }
+.social-link:hover { opacity: 0.85; transform: translateY(-2px); }
+.social-airbnb    { background: #FF385C; color: #fff; }
+.social-instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: #fff; }
+.social-tiktok    { background: #010101; color: #fff; }
 
 /* ── PAYMENT UI ── */
 .payment-recap { background: var(--bg-gray); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem; }
