@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> – <%= settings.siteName %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <%- typeof extraHead !== 'undefined' ? extraHead : '' %>
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <span class="logo-icon">⭐</span>
+      <%= settings.siteName %>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="/" class="<%= page === 'home' ? 'active' : '' %>">Accueil</a></li>
+      <li><a href="/chambres" class="<%= page === 'rooms' ? 'active' : '' %>">Nos chambres</a></li>
+      <li><a href="/#services">Services</a></li>
+      <li><a href="/#contact">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="/chambres" class="btn-nav">Réserver</a>
+      <button class="nav-burger" id="navBurger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<%- body %>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="/" class="footer-logo"><span class="logo-icon">⭐</span> <%= settings.siteName %></a>
+      <p class="footer-desc"><%= settings.tagline %></p>
+    </div>
+    <div class="footer-links-group">
+      <h4>Navigation</h4>
+      <a href="/">Accueil</a>
+      <a href="/chambres">Nos chambres</a>
+      <a href="/#services">Services</a>
+    </div>
+    <div class="footer-links-group">
+      <h4>Contact</h4>
+      <a href="tel:<%= settings.phone.replace(/\s/g,'') %>"><%= settings.phone %></a>
+      <a href="mailto:<%= settings.email %>"><%= settings.email %></a>
+      <span><%= settings.address %></span>
+    </div>
+    <div class="footer-links-group">
+      <h4>Gestion</h4>
+      <a href="/admin">Administration</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© <%= new Date().getFullYear() %> <%= settings.siteName %> · Tous droits réservés</p>
+  </div>
+</footer>
+
+<script src="/js/main.js"></script>
+</body>
+</html>

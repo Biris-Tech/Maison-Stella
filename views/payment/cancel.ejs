@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paiement annulé – <%= settings.siteName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .payment-result-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-gray); padding: 2rem; }
+    .payment-result-card { background: #fff; border-radius: 20px; padding: 3rem 2.5rem; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 8px 40px rgba(0,0,0,0.08); }
+    .result-icon { font-size: 4rem; margin-bottom: 1.25rem; }
+    .result-card-title { font-size: 1.6rem; font-weight: 700; color: var(--dark); margin-bottom: 0.75rem; }
+    .result-card-text { color: var(--muted); line-height: 1.7; font-size: 0.95rem; margin-bottom: 2rem; }
+    .result-actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+  </style>
+</head>
+<body>
+<%- include('../partials/nav', { page, settings }) %>
+
+<div class="payment-result-page">
+  <div class="payment-result-card">
+    <div class="result-icon">😕</div>
+    <h1 class="result-card-title">Paiement non complété</h1>
+    <p class="result-card-text">
+      Le paiement a été annulé ou n'a pas pu être finalisé. Votre réservation n'a pas été enregistrée.
+      Aucun montant n'a été débité.
+    </p>
+    <p class="result-card-text" style="margin-top:-1rem;">
+      Réessayez ou contactez-nous directement :<br>
+      <a href="tel:<%= settings.phone.replace(/\s/g,'') %>" style="color:var(--primary); font-weight:600;"><%= settings.phone %></a>
+    </p>
+    <div class="result-actions">
+      <a href="/chambres" class="btn-primary">Réessayer</a>
+      <a href="/" class="btn-outline">Accueil</a>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer', { settings }) %>
+</body>
+</html>

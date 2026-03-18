@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Nouvelle chambre</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+
+<%- include('sidebar', { activePage: 'rooms', settings }) %>
+
+<main class="admin-main">
+  <div class="admin-topbar">
+    <h1 class="admin-page-title">Nouvelle chambre</h1>
+    <a href="/admin/chambres" class="btn-admin-outline btn-sm">← Retour</a>
+  </div>
+  <div class="admin-content">
+
+    <% if (error) { %>
+    <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <form method="POST" action="/admin/chambres/nouvelle" enctype="multipart/form-data" class="settings-form">
+      <div class="settings-card">
+        <h2 class="settings-section-title">Informations générales</h2>
+        <div class="settings-grid">
+          <div class="field">
+            <label>Nom de la chambre *</label>
+            <input type="text" name="name" placeholder="ex: Suite Panorama" required>
+          </div>
+          <div class="field">
+            <label>Prix (FCFA / nuit) *</label>
+            <input type="number" name="price" placeholder="ex: 45000" min="1" required>
+          </div>
+          <div class="field">
+            <label>Capacité (personnes) *</label>
+            <input type="number" name="capacity" placeholder="ex: 2" min="1" max="10" required>
+          </div>
+          <div class="field">
+            <label>Type de lit *</label>
+            <input type="text" name="bedType" placeholder="ex: Lit king size" required>
+          </div>
+          <div class="field">
+            <label>Badge (optionnel)</label>
+            <input type="text" name="badge" placeholder="ex: Populaire, Suite, Nouveauté">
+          </div>
+          <div class="field" style="align-self:center;">
+            <label>
+              <input type="checkbox" name="featured">
+              Mettre en vedette sur l'accueil
+            </label>
+          </div>
+          <div class="field field-full">
+            <label>Description *</label>
+            <textarea name="desc" rows="4" placeholder="Décrivez la chambre en quelques phrases..." required></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h2 class="settings-section-title">Équipements & composition</h2>
+        <div class="settings-grid">
+          <div class="field">
+            <label>Composition de la chambre</label>
+            <textarea name="composition" rows="6" placeholder="Lit king size&#10;Salle de bain privative&#10;Coin bureau&#10;Armoire spacieuse"></textarea>
+            <span class="field-hint">Un élément par ligne</span>
+          </div>
+          <div class="field">
+            <label>Commodités / Services</label>
+            <textarea name="amenities" rows="6" placeholder="Wi-Fi haut débit&#10;Climatisation&#10;TV écran plat&#10;Service ménage"></textarea>
+            <span class="field-hint">Un élément par ligne</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h2 class="settings-section-title">Photos de la chambre</h2>
+        <div class="upload-zone" id="uploadZone">
+          <div class="upload-zone-inner">
+            <div class="upload-icon">🖼️</div>
+            <p><strong>Glissez vos photos ici</strong> ou cliquez pour sélectionner</p>
+            <small>JPG, PNG, WEBP · Max 15 Mo par photo · Plusieurs photos possibles</small>
+            <input type="file" name="images" id="imagesInput" accept="image/*" multiple style="display:none;">
+            <button type="button" class="btn-admin-outline btn-sm" style="margin-top:0.75rem;" onclick="document.getElementById('imagesInput').click()">
+              Choisir des photos
+            </button>
+          </div>
+        </div>
+        <div class="upload-preview" id="uploadPreview"></div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-admin-primary btn-lg">Créer la chambre</button>
+        <a href="/admin/chambres" class="btn-admin-outline btn-lg">Annuler</a>
+      </div>
+    </form>
+
+  </div>
+</main>
+
+<script src="/js/admin.js"></script>
+<script>
+  const input   = document.getElementById('imagesInput');
+  const preview = document.getElementById('uploadPreview');
+  const zone    = document.getElementById('uploadZone');
+
+  input.addEventListener('change', showPreviews);
+
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag-over');
+    const dt = new DataTransfer();
+    [...(input.files || []), ...e.dataTransfer.files].forEach(f => dt.items.add(f));
+    input.files = dt.files;
+    showPreviews();
+  });
+
+  function showPreviews() {
+    preview.innerHTML = '';
+    [...input.files].forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const div = document.createElement('div');
+        div.className = 'preview-thumb';
+        div.innerHTML = `<img src="${e.target.result}" alt="${file.name}"><span>${file.name}</span>`;
+        preview.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+</script>
+</body>
+</html>

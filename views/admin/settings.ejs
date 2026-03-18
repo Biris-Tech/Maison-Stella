@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Paramètres</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+
+<%- include('sidebar', { activePage: 'settings', settings }) %>
+
+<main class="admin-main">
+  <div class="admin-topbar">
+    <h1 class="admin-page-title">Paramètres du site</h1>
+  </div>
+  <div class="admin-content">
+
+    <% if (success) { %>
+    <div class="alert alert-success">✅ Paramètres enregistrés avec succès.</div>
+    <% } %>
+
+    <form method="POST" action="/admin/parametres" class="settings-form">
+      <div class="settings-card">
+        <h2 class="settings-section-title">Informations générales</h2>
+        <div class="settings-grid">
+          <div class="field">
+            <label>Nom du site</label>
+            <input type="text" name="siteName" value="<%= settings.siteName %>" required>
+          </div>
+          <div class="field">
+            <label>Tagline</label>
+            <input type="text" name="tagline" value="<%= settings.tagline %>">
+          </div>
+          <div class="field field-full">
+            <label>Description (hero)</label>
+            <textarea name="description" rows="2"><%= settings.description %></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h2 class="settings-section-title">Contact</h2>
+        <div class="settings-grid">
+          <div class="field">
+            <label>Téléphone / WhatsApp</label>
+            <input type="text" name="phone" value="<%= settings.phone %>">
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" name="email" value="<%= settings.email %>">
+          </div>
+          <div class="field">
+            <label>Adresse</label>
+            <input type="text" name="address" value="<%= settings.address %>">
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h2 class="settings-section-title">Page d'accueil</h2>
+        <div class="settings-grid">
+          <div class="field field-full">
+            <label>Image hero (nom du fichier dans /public/image/)</label>
+            <input type="text" name="heroImage" value="<%= settings.heroImage %>" placeholder="ex: IMG_0497 Large.jpeg">
+            <div class="field-hint">
+              <% if (settings.heroImage) { %>
+              <img src="/image/<%= encodeURIComponent(settings.heroImage) %>" alt="hero preview" style="width:120px;height:70px;object-fit:cover;border-radius:6px;margin-top:0.5rem;">
+              <% } %>
+            </div>
+          </div>
+          <div class="field field-full">
+            <label>Texte "À propos" (paragraphe 1)</label>
+            <textarea name="aboutText" rows="3"><%= settings.aboutText %></textarea>
+          </div>
+          <div class="field field-full">
+            <label>Texte "À propos" (paragraphe 2)</label>
+            <textarea name="aboutText2" rows="2"><%= settings.aboutText2 %></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h2 class="settings-section-title">Sécurité</h2>
+        <div class="settings-grid">
+          <div class="field">
+            <label>Nouveau mot de passe admin</label>
+            <input type="password" name="adminPlain" placeholder="Laisser vide pour ne pas changer">
+            <span class="field-hint">Mot de passe actuel : <code>stella2026</code> (par défaut)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-admin-primary btn-lg">Enregistrer les paramètres</button>
+      </div>
+    </form>
+
+  </div>
+</main>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

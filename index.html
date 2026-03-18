@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maison Stella – Résidence de Charme à Lomé</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A96E;
+    --gold-light: #E8D5B0;
+    --dark: #1a1612;
+    --dark2: #2a241e;
+    --cream: #F7F2EA;
+    --text: #3d342a;
+    --muted: #7a6e63;
+    --line: rgba(201,169,110,0.22);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); overflow-x: hidden; }
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.2rem 3rem;
+    background: transparent;
+    transition: all 0.4s ease;
+  }
+  nav.scrolled {
+    background: rgba(26,22,18,0.96);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(201,169,110,0.2);
+  }
+  .nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 300; letter-spacing: 0.12em; color: #fff; text-decoration: none; }
+  .nav-logo span { color: var(--gold); font-style: italic; }
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a { color: rgba(255,255,255,0.82); text-decoration: none; font-size: 0.74rem; letter-spacing: 0.15em; text-transform: uppercase; transition: color 0.25s; }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-cta { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 0.55rem 1.5rem; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.3s; text-decoration: none; }
+  .nav-cta:hover { background: var(--gold); color: var(--dark); }
+  .nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+  .nav-burger span { display: block; width: 22px; height: 1.5px; background: #fff; }
+  .hero {
+    height: 100vh; min-height: 600px;
+    position: relative; display: flex; align-items: flex-end;
+    padding-bottom: 6rem; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: url('image/IMG_0497%20Large.jpeg') center/cover no-repeat;
+    transform: scale(1.05); transition: transform 8s ease;
+  }
+  .hero-bg.loaded { transform: scale(1); }
+  .hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(26,22,18,0.88) 0%, rgba(26,22,18,0.25) 55%, rgba(26,22,18,0.1) 100%);
+  }
+  .hero-content { position: relative; z-index: 2; padding: 0 3rem; max-width: 860px; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 0.8rem; font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold-light); margin-bottom: 1.4rem; }
+  .hero-badge::before { content: ''; display: block; width: 28px; height: 1px; background: var(--gold); }
+  .hero h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(3.8rem, 9vw, 7.5rem); font-weight: 300; line-height: 1.0; color: #fff; }
+  .hero h1 em { color: var(--gold); font-style: italic; }
+  .hero-sub { margin-top: 1.2rem; font-size: 1rem; color: rgba(247,242,234,0.75); line-height: 1.8; max-width: 440px; }
+  .hero-actions { display: flex; gap: 1rem; margin-top: 2.2rem; flex-wrap: wrap; }
+  .btn-hero { display: inline-flex; align-items: center; gap: 0.6rem; padding: 1rem 2.2rem; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none; transition: all 0.3s; cursor: pointer; border: none; }
+  .btn-hero-primary { background: var(--gold); color: var(--dark); }
+  .btn-hero-primary:hover { background: var(--gold-light); }
+  .btn-hero-outline { background: transparent; border: 1px solid rgba(255,255,255,0.5); color: #fff; }
+  .btn-hero-outline:hover { border-color: var(--gold); color: var(--gold); }
+  .hero-scroll { position: absolute; bottom: 2.5rem; right: 3rem; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+  .hero-scroll::after { content: ''; display: block; width: 1px; height: 40px; background: linear-gradient(to bottom, var(--gold), transparent); animation: scrollLine 2s ease-in-out infinite; }
+  @keyframes scrollLine { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+  .features-strip { background: var(--dark2); border-top: 1px solid rgba(201,169,110,0.18); border-bottom: 1px solid rgba(201,169,110,0.18); display: flex; justify-content: center; flex-wrap: wrap; }
+  .feature-item { display: flex; align-items: center; gap: 0.75rem; padding: 1.3rem 2.4rem; border-right: 1px solid rgba(201,169,110,0.14); color: rgba(247,242,234,0.72); font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; transition: color 0.25s; }
+  .feature-item:last-child { border-right: none; }
+  .feature-item:hover { color: var(--gold); }
+  .feature-icon { font-size: 1.1rem; }
+  .container { max-width: 1240px; margin: 0 auto; padding: 0 2.5rem; }
+  section { padding: 7rem 0; }
+  .section-label { display: inline-flex; align-items: center; gap: 0.7rem; font-size: 0.68rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.1rem; }
+  .section-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(2.2rem, 4.5vw, 3.8rem); font-weight: 300; color: var(--dark); line-height: 1.1; }
+  .section-title em { font-style: italic; color: var(--gold); }
+  .section-title.light { color: var(--cream); }
+  .section-body { max-width: 520px; color: var(--muted); line-height: 1.85; margin-top: 1.2rem; font-size: 0.95rem; }
+  .divider { width: 40px; height: 1px; background: var(--gold); margin: 1.5rem 0; }
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; }
+  .about-images { position: relative; padding-bottom: 3rem; padding-right: 3rem; }
+  .about-img-main { width: 100%; aspect-ratio: 3/4; overflow: hidden; }
+  .about-img-main img { width: 100%; height: 100%; object-fit: cover; }
+  .about-img-float { position: absolute; bottom: 0; right: 0; width: 55%; aspect-ratio: 4/3; overflow: hidden; border: 4px solid var(--cream); box-shadow: 0 20px 60px rgba(0,0,0,0.22); }
+  .about-img-float img { width: 100%; height: 100%; object-fit: cover; }
+  .about-accent { position: absolute; top: -1.5rem; left: -1.5rem; width: 70px; height: 70px; border-top: 2px solid var(--gold); border-left: 2px solid var(--gold); }
+  .stats-row { display: flex; gap: 2.5rem; margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--line); }
+  .stat-num { font-family: 'Cormorant Garamond', serif; font-size: 2.8rem; font-weight: 300; color: var(--gold); line-height: 1; }
+  .stat-label { font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-top: 0.3rem; }
+  .rooms-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3.5rem; flex-wrap: wrap; gap: 1.5rem; }
+  .rooms-grid-preview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(201,169,110,0.15); }
+  .room-card-preview { background: var(--dark); overflow: hidden; position: relative; cursor: pointer; text-decoration: none; display: block; }
+  .room-card-preview .img-wrap { aspect-ratio: 2/3; overflow: hidden; }
+  .room-card-preview .img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.55s ease, filter 0.4s ease; filter: brightness(0.8); }
+  .room-card-preview:hover .img-wrap img { transform: scale(1.07); filter: brightness(1); }
+  .room-card-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.8rem 1.5rem 1.5rem; background: linear-gradient(to top, rgba(26,22,18,0.95) 0%, transparent 100%); }
+  .room-card-name { font-family: 'Cormorant Garamond', serif; font-size: 1.55rem; font-weight: 300; color: #fff; }
+  .room-card-price { font-size: 0.78rem; color: var(--gold-light); margin-top: 0.3rem; letter-spacing: 0.08em; }
+  .room-card-arrow { position: absolute; top: 1.2rem; right: 1.2rem; width: 36px; height: 36px; border: 1px solid rgba(201,169,110,0.4); display: flex; align-items: center; justify-content: center; color: var(--gold); opacity: 0; transform: translateY(-4px); transition: all 0.3s ease; font-size: 0.9rem; }
+  .room-card-preview:hover .room-card-arrow { opacity: 1; transform: translateY(0); }
+  .rooms-cta-wrap { text-align: center; margin-top: 3rem; }
+  .gallery-section { background: var(--dark); padding: 5rem 0; }
+  .gallery-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem; }
+  .gallery-mosaic { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: 240px 240px; gap: 4px; }
+  .gallery-item { overflow: hidden; cursor: pointer; }
+  .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease, filter 0.4s ease; filter: brightness(0.75); }
+  .gallery-item:hover img { transform: scale(1.07); filter: brightness(1); }
+  .gallery-item:nth-child(1) { grid-column: span 2; grid-row: span 2; }
+  .gallery-item:nth-child(3) { grid-row: span 2; }
+  .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 3.5rem; background: var(--line); }
+  .service-card { background: var(--cream); padding: 2.8rem 2.2rem; transition: background 0.3s; }
+  .service-card:hover { background: #fff; }
+  .service-icon { font-size: 2rem; margin-bottom: 1.2rem; }
+  .service-title { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 300; color: var(--dark); margin-bottom: 0.75rem; }
+  .service-desc { color: var(--muted); font-size: 0.88rem; line-height: 1.75; }
+  .events-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; }
+  .event-img { aspect-ratio: 4/5; overflow: hidden; }
+  .event-img img { width: 100%; height: 100%; object-fit: cover; }
+  .event-list { margin-top: 2.5rem; display: grid; gap: 1.2rem; }
+  .event-item { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border: 1px solid var(--line); background: #fff; transition: border-color 0.25s; }
+  .event-item:hover { border-color: var(--gold); }
+  .event-num { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 300; color: var(--gold); line-height: 1; min-width: 2rem; }
+  .event-name { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--dark); margin-bottom: 0.3rem; }
+  .event-desc { font-size: 0.84rem; color: var(--muted); line-height: 1.6; }
+  .contact-section { background: var(--dark); }
+  .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: start; }
+  .contact-items { display: grid; gap: 1.8rem; margin-top: 2.5rem; }
+  .contact-item { display: flex; gap: 1.2rem; align-items: flex-start; }
+  .contact-icon { width: 42px; height: 42px; border: 1px solid rgba(201,169,110,0.35); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+  .contact-label { font-size: 0.64rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.35rem; }
+  .contact-val { color: rgba(247,242,234,0.82); font-size: 0.95rem; text-decoration: none; line-height: 1.6; }
+  .contact-val:hover { color: var(--gold); }
+  .contact-form { display: grid; gap: 1rem; margin-top: 2.5rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .field { display: flex; flex-direction: column; gap: 0.45rem; }
+  .field label { font-size: 0.64rem; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(247,242,234,0.5); }
+  .field input, .field textarea { border: 1px solid rgba(201,169,110,0.2); background: rgba(255,255,255,0.04); color: var(--cream); padding: 0.9rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; outline: none; resize: none; transition: border-color 0.25s; }
+  .field input:focus, .field textarea:focus { border-color: var(--gold); }
+  .submit-btn { border: none; background: var(--gold); color: var(--dark); padding: 1rem 2rem; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: background 0.25s; width: 100%; }
+  .submit-btn:hover { background: var(--gold-light); }
+  footer { background: var(--dark); border-top: 1px solid rgba(201,169,110,0.12); padding: 2.5rem 0; }
+  .footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+  .footer-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 300; color: var(--gold-light); letter-spacing: 0.12em; text-decoration: none; }
+  .footer-logo span { color: var(--gold); font-style: italic; }
+  .footer-copy { color: rgba(247,242,234,0.3); font-size: 0.76rem; letter-spacing: 0.06em; }
+  .footer-links { display: flex; gap: 2rem; }
+  .footer-links a { color: rgba(247,242,234,0.4); font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; transition: color 0.25s; }
+  .footer-links a:hover { color: var(--gold); }
+  @media (max-width: 1050px) {
+    .about-grid, .events-grid, .contact-grid { grid-template-columns: 1fr; gap: 3rem; }
+    .rooms-grid-preview { grid-template-columns: repeat(2, 1fr); }
+    .gallery-mosaic { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; }
+    .gallery-item:nth-child(1), .gallery-item:nth-child(3) { grid-column: span 1; grid-row: span 1; }
+    .about-images { padding-right: 0; }
+    .about-img-float { display: none; }
+    .services-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .nav-links.open { display: flex; flex-direction: column; position: fixed; top: 64px; left: 0; right: 0; background: rgba(26,22,18,0.97); padding: 2rem; gap: 1.5rem; border-bottom: 1px solid rgba(201,169,110,0.2); z-index: 99; }
+    .nav-burger { display: flex; }
+    .hero-content { padding: 0 1.5rem; }
+    .container { padding: 0 1.5rem; }
+    section { padding: 4.5rem 0; }
+    .rooms-grid-preview { grid-template-columns: 1fr; }
+    .gallery-mosaic { grid-template-columns: repeat(2, 1fr); grid-template-rows: 180px 180px 180px; }
+    .services-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .footer-inner { flex-direction: column; text-align: center; }
+    .hero-scroll { display: none; }
+    .feature-item { padding: 1rem 1.5rem; font-size: 0.7rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="navbar">
+  <a href="index.html" class="nav-logo">Maison <span>Stella</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#about">À propos</a></li>
+    <li><a href="#gallery">Galerie</a></li>
+    <li><a href="nos-chambres.html">Nos chambres</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="nos-chambres.html" class="nav-cta">Réserver</a>
+  <div class="nav-burger" id="navBurger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-badge">Résidence de Charme · Avepozo, Lomé, Togo</div>
+    <h1>Maison<br><em>Stella</em></h1>
+    <p class="hero-sub">Une retraite d'exception nichée au cœur d'Avepozo. Élégance, intimité et service personnalisé.</p>
+    <div class="hero-actions">
+      <a href="nos-chambres.html" class="btn-hero btn-hero-primary">Voir nos chambres</a>
+      <a href="#about" class="btn-hero btn-hero-outline">Découvrir</a>
+    </div>
+  </div>
+  <div class="hero-scroll">Défiler</div>
+</section>
+
+<div class="features-strip">
+  <div class="feature-item"><span class="feature-icon">🏡</span><span>7 Chambres</span></div>
+  <div class="feature-item"><span class="feature-icon">🏊</span><span>Piscine privée</span></div>
+  <div class="feature-item"><span class="feature-icon">👨‍🍳</span><span>Chef cuisinier</span></div>
+  <div class="feature-item"><span class="feature-icon">🍹</span><span>Bar & Restaurant</span></div>
+  <div class="feature-item"><span class="feature-icon">📶</span><span>WiFi haut débit</span></div>
+  <div class="feature-item"><span class="feature-icon">🌿</span><span>Jardin & Événements</span></div>
+</div>
+
+<section id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-images">
+        <div class="about-accent"></div>
+        <div class="about-img-main">
+          <img src="image/IMG_0424%20Large.jpeg" alt="Maison Stella" loading="lazy">
+        </div>
+        <div class="about-img-float">
+          <img src="image/IMG_0499%20Large.jpeg" alt="Maison Stella détail" loading="lazy">
+        </div>
+      </div>
+      <div>
+        <span class="section-label">✦ Notre Histoire</span>
+        <h2 class="section-title">Un lieu d'exception à <em>Avepozo</em></h2>
+        <div class="divider"></div>
+        <p class="section-body">Maison Stella est une résidence de charme fondée avec l'ambition de faire vivre à chaque hôte une expérience authentique et raffinée à Lomé. Chaque détail — du mobilier choisi avec soin aux prestations personnalisées — a été pensé pour votre confort.</p>
+        <p class="section-body" style="margin-top: 1rem;">Niché à Avepozo, au bord du lac, notre établissement allie l'âme d'une maison familiale au standing d'un boutique hôtel haut de gamme.</p>
+        <div class="stats-row">
+          <div class="stat"><div class="stat-num">7</div><div class="stat-label">Chambres</div></div>
+          <div class="stat"><div class="stat-num">1</div><div class="stat-label">Piscine</div></div>
+          <div class="stat"><div class="stat-num">24/7</div><div class="stat-label">Service</div></div>
+          <div class="stat"><div class="stat-num">5★</div><div class="stat-label">Expérience</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding: 0 0 7rem; background: var(--dark2);" id="chambres-preview">
+  <div class="container" style="padding-top: 7rem;">
+    <div class="rooms-header">
+      <div>
+        <span class="section-label">✦ Nos hébergements</span>
+        <h2 class="section-title light">Chambres &amp; <em>Suites</em></h2>
+      </div>
+      <p style="color: rgba(247,242,234,0.55); font-size: 0.88rem; max-width: 340px; line-height: 1.7;">Du confort raffiné à la suite prestige, chaque chambre est une invitation au repos.</p>
+    </div>
+    <div class="rooms-grid-preview">
+      <a href="chambre-detail.html?room=chambre-signature" class="room-card-preview">
+        <div class="img-wrap"><img src="image/IMG_0457%20Large.jpeg" alt="Chambre Signature" loading="lazy"></div>
+        <div class="room-card-info">
+          <div class="room-card-name">Chambre Signature</div>
+          <div class="room-card-price">À partir de 45 000 FCFA / nuit</div>
+        </div>
+        <div class="room-card-arrow">→</div>
+      </a>
+      <a href="chambre-detail.html?room=suite-stella" class="room-card-preview">
+        <div class="img-wrap"><img src="image/IMG_0476%20Large.jpeg" alt="Suite Stella" loading="lazy"></div>
+        <div class="room-card-info">
+          <div class="room-card-name">Suite Stella</div>
+          <div class="room-card-price">À partir de 58 000 FCFA / nuit</div>
+        </div>
+        <div class="room-card-arrow">→</div>
+      </a>
+      <a href="chambre-detail.html?room=suite-prestige" class="room-card-preview">
+        <div class="img-wrap"><img src="image/IMG_0493%20Large.jpeg" alt="Suite Prestige" loading="lazy"></div>
+        <div class="room-card-info">
+          <div class="room-card-name">Suite Prestige</div>
+          <div class="room-card-price">À partir de 68 000 FCFA / nuit</div>
+        </div>
+        <div class="room-card-arrow">→</div>
+      </a>
+    </div>
+    <div class="rooms-cta-wrap">
+      <a href="nos-chambres.html" class="btn-hero btn-hero-outline" style="display: inline-flex;">Voir toutes nos chambres →</a>
+    </div>
+  </div>
+</section>
+
+<section id="gallery" class="gallery-section">
+  <div class="container">
+    <div class="gallery-header">
+      <div>
+        <span class="section-label">✦ Galerie Photos</span>
+        <h2 class="section-title light">La résidence en <em>images</em></h2>
+      </div>
+    </div>
+    <div class="gallery-mosaic">
+      <div class="gallery-item"><img src="image/IMG_0500%20Large.jpeg" alt="Maison Stella" loading="lazy"></div>
+      <div class="gallery-item"><img src="image/IMG_0425%20Large.jpeg" alt="Maison Stella" loading="lazy"></div>
+      <div class="gallery-item"><img src="image/IMG_0466%20Large.jpeg" alt="Maison Stella" loading="lazy"></div>
+      <div class="gallery-item"><img src="image/IMG_0508%20Large.jpeg" alt="Maison Stella" loading="lazy"></div>
+      <div class="gallery-item"><img src="image/IMG_0485%20Large.jpeg" alt="Maison Stella" loading="lazy"></div>
+      <div class="gallery-item"><img src="image/IMG_0512%20Large.jpeg" alt="Maison Stella" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<section id="services">
+  <div class="container">
+    <span class="section-label">✦ Nos Services</span>
+    <h2 class="section-title">Tout pour votre <em>confort</em></h2>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon">🏊‍♂️</div>
+        <h3 class="service-title">Piscine Privée</h3>
+        <p class="service-desc">Accès exclusif à notre piscine entourée de verdure, disponible 24h/24 pour les résidents de la maison.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">👨‍🍳</div>
+        <h3 class="service-title">Chef Cuisinier</h3>
+        <p class="service-desc">Notre chef prépare des menus sur mesure mettant en valeur la cuisine locale et internationale selon vos préférences.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🍹</div>
+        <h3 class="service-title">Bar &amp; Restaurant</h3>
+        <p class="service-desc">Cocktails artisanaux, vins sélectionnés et restauration légère disponibles dans notre espace lounge.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">📶</div>
+        <h3 class="service-title">Internet Haut Débit</h3>
+        <p class="service-desc">Connexion WiFi fibre dans toutes les chambres et espaces communs pour rester connecté en toute fluidité.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🛏️</div>
+        <h3 class="service-title">Service Ménage Quotidien</h3>
+        <p class="service-desc">Votre chambre est préparée chaque jour avec soin. Service blanchisserie disponible sur demande.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🌿</div>
+        <h3 class="service-title">Jardin Tropical</h3>
+        <p class="service-desc">Un jardin luxuriant pour événements privés, détente ou simplement profiter de l'air du lac.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="events" style="background: var(--cream);">
+  <div class="container">
+    <div class="events-grid">
+      <div class="event-img">
+        <img src="image/IMG_0517%20Large.jpeg" alt="Événements Maison Stella" loading="lazy">
+      </div>
+      <div>
+        <span class="section-label">✦ Événements</span>
+        <h2 class="section-title">Célébrez vos <em>moments</em> précieux</h2>
+        <div class="divider"></div>
+        <p class="section-body">Maison Stella accueille vos événements les plus importants dans un cadre intimiste et verdoyant à Avepozo.</p>
+        <div class="event-list">
+          <div class="event-item">
+            <div class="event-num">01</div>
+            <div>
+              <div class="event-name">Mariages</div>
+              <div class="event-desc">Un cadre romantique et verdoyant pour le plus beau jour de votre vie, avec personnalisation complète.</div>
+            </div>
+          </div>
+          <div class="event-item">
+            <div class="event-num">02</div>
+            <div>
+              <div class="event-name">Anniversaires</div>
+              <div class="event-desc">Fêtez vos anniversaires dans un cadre unique avec cuisine sur mesure et décoration personnalisée.</div>
+            </div>
+          </div>
+          <div class="event-item">
+            <div class="event-num">03</div>
+            <div>
+              <div class="event-name">Séminaires &amp; Réceptions</div>
+              <div class="event-desc">Réunions professionnelles et cocktails d'affaires dans un environnement discret et raffiné.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="contact-section">
+  <div class="container">
+    <div class="contact-grid">
+      <div>
+        <span class="section-label">✦ Contact</span>
+        <h2 class="section-title light">Prenons <em>contact</em></h2>
+        <div class="divider"></div>
+        <p class="section-body" style="color: rgba(247,242,234,0.62);">Pour toute demande de réservation, événement ou renseignement, notre équipe est disponible 7j/7.</p>
+        <div class="contact-items">
+          <div class="contact-item">
+            <div class="contact-icon">📍</div>
+            <div>
+              <div class="contact-label">Adresse</div>
+              <div class="contact-val">Avepozo, Lomé, Togo</div>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon">📞</div>
+            <div>
+              <div class="contact-label">Téléphone / WhatsApp</div>
+              <a href="tel:+22871595136" class="contact-val">+228 71 59 51 36</a>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon">🕐</div>
+            <div>
+              <div class="contact-label">Horaires</div>
+              <div class="contact-val">Ouvert 24h/24 · 7j/7</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 300; color: var(--cream); margin-bottom: 0.5rem; margin-top: 0.1rem;">Envoyer un message</h3>
+        <div class="divider"></div>
+        <form class="contact-form" onsubmit="handleContact(event)">
+          <div class="form-row">
+            <div class="field"><label>Prénom</label><input type="text" placeholder="Votre prénom" required></div>
+            <div class="field"><label>Nom</label><input type="text" placeholder="Votre nom" required></div>
+          </div>
+          <div class="field"><label>Téléphone</label><input type="tel" placeholder="+228 XX XX XX XX"></div>
+          <div class="field"><label>Message</label><textarea rows="4" placeholder="Votre message…" required></textarea></div>
+          <button class="submit-btn" type="submit">Envoyer le message</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <a href="index.html" class="footer-logo">Maison <span>Stella</span></a>
+      <nav class="footer-links">
+        <a href="#about">À propos</a>
+        <a href="nos-chambres.html">Chambres</a>
+        <a href="#services">Services</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <p class="footer-copy">© 2026 Maison Stella · Avepozo, Lomé, Togo</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+  });
+  document.getElementById('heroBg').classList.add('loaded');
+  function toggleMenu() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+  function handleContact(e) {
+    e.preventDefault();
+    alert('Message envoyé ✅\nNous vous répondrons très bientôt.');
+    e.target.reset();
+  }
+</script>
+</body>
+</html>

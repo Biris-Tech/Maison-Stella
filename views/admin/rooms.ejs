@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Chambres</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+
+<%- include('sidebar', { activePage: 'rooms', settings }) %>
+
+<main class="admin-main">
+  <div class="admin-topbar">
+    <h1 class="admin-page-title">Gestion des chambres</h1>
+    <a href="/admin/chambres/nouvelle" class="btn-admin-primary btn-sm">+ Nouvelle chambre</a>
+  </div>
+  <div class="admin-content">
+
+    <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+    <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+    <div class="rooms-admin-grid">
+      <% rooms.forEach(room => { %>
+      <div class="room-admin-card <%= room.active ? '' : 'room-inactive' %>">
+
+        <!-- IMAGE PRINCIPALE -->
+        <div class="room-admin-img">
+          <img src="/image/<%= encodeURIComponent(room.images[0] || '') %>" alt="<%= room.name %>" loading="lazy" onerror="this.src='/image/placeholder.jpg'">
+          <div class="room-admin-status">
+            <span class="status-pill <%= room.active ? 'status-active' : 'status-inactive' %>">
+              <%= room.active ? 'Actif' : 'Inactif' %>
+            </span>
+            <% if (room.featured) { %><span class="status-pill status-featured">⭐ Vedette</span><% } %>
+          </div>
+        </div>
+
+        <div class="room-admin-body">
+          <div class="room-admin-header">
+            <h3><%= room.name %></h3>
+            <strong class="room-admin-price"><%= room.price.toLocaleString('fr-FR') %> FCFA</strong>
+          </div>
+          <p class="room-admin-meta"><%= room.bedType %> · <%= room.capacity %> pers. · <%= room.images.length %> photo<%= room.images.length > 1 ? 's' : '' %></p>
+
+          <div class="room-admin-actions">
+            <a href="/admin/chambres/edit/<%= room.id %>" class="btn-admin-outline btn-sm">✏️ Modifier</a>
+            <form method="POST" action="/admin/chambres/toggle/<%= room.id %>" style="display:inline">
+              <button type="submit" class="btn-admin-ghost btn-sm">
+                <%= room.active ? 'Désactiver' : 'Activer' %>
+              </button>
+            </form>
+            <a href="/chambre/<%= room.id %>" target="_blank" class="btn-admin-ghost btn-sm">Voir →</a>
+            <form method="POST" action="/admin/chambres/delete/<%= room.id %>" style="display:inline"
+              onsubmit="return confirm('Supprimer « <%= room.name %> » ? Cette action est irréversible.')">
+              <button type="submit" class="btn-xs btn-red">🗑</button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+      <% }) %>
+    </div>
+
+    <% if (rooms.length === 0) { %>
+    <div class="empty-state">
+      <div class="empty-icon">🏠</div>
+      <p>Aucune chambre créée pour l'instant.</p>
+      <a href="/admin/chambres/nouvelle" class="btn-admin-primary">Créer la première chambre</a>
+    </div>
+    <% } %>
+
+  </div>
+</main>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

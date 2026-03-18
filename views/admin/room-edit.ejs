@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Modifier <%= room.name %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+
+<%- include('sidebar', { activePage: 'rooms', settings }) %>
+
+<main class="admin-main">
+  <div class="admin-topbar">
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+      <a href="/admin/chambres" class="topbar-back">← Chambres</a>
+      <span class="topbar-sep">/</span>
+      <h1 class="admin-page-title"><%= room.name %></h1>
+    </div>
+    <div style="display:flex; gap:0.75rem;">
+      <a href="/chambre/<%= room.id %>" target="_blank" class="btn-admin-outline btn-sm">Voir sur le site →</a>
+      <form method="POST" action="/admin/chambres/delete/<%= room.id %>" style="display:inline"
+        onsubmit="return confirm('Supprimer « <%= room.name %> » ? Cette action est irréversible.')">
+        <button type="submit" class="btn-xs btn-red" style="padding:0.5rem 1rem;">🗑 Supprimer</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="admin-content">
+    <% if (success) { %><div class="alert alert-success">✅ <%= success %></div><% } %>
+    <% if (error) { %><div class="alert alert-error">❌ <%= error %></div><% } %>
+
+    <div class="edit-page-grid">
+
+      <!-- COLONNE GAUCHE : infos -->
+      <div>
+        <div class="settings-card">
+          <h2 class="settings-section-title">Informations générales</h2>
+          <form method="POST" action="/admin/chambres/update/<%= room.id %>">
+            <div class="settings-grid">
+              <div class="field">
+                <label>Nom de la chambre</label>
+                <input type="text" name="name" value="<%= room.name %>" required>
+              </div>
+              <div class="field">
+                <label>Prix (FCFA / nuit)</label>
+                <input type="number" name="price" value="<%= room.price %>" required>
+              </div>
+              <div class="field">
+                <label>Capacité (personnes)</label>
+                <input type="number" name="capacity" value="<%= room.capacity %>" min="1" max="10">
+              </div>
+              <div class="field">
+                <label>Type de lit</label>
+                <input type="text" name="bedType" value="<%= room.bedType %>">
+              </div>
+              <div class="field">
+                <label>Badge</label>
+                <input type="text" name="badge" value="<%= room.badge %>" placeholder="ex: Populaire, Suite…">
+              </div>
+              <div class="field" style="align-self:center;">
+                <label>
+                  <input type="checkbox" name="featured" <%= room.featured ? 'checked' : '' %>>
+                  Mettre en vedette sur l'accueil
+                </label>
+              </div>
+              <div class="field field-full">
+                <label>Description</label>
+                <textarea name="desc" rows="4"><%= room.desc %></textarea>
+              </div>
+              <div class="field">
+                <label>Composition de la chambre</label>
+                <textarea name="composition" rows="7"><%= room.composition.join('\n') %></textarea>
+                <span class="field-hint">Un élément par ligne</span>
+              </div>
+              <div class="field">
+                <label>Commodités / Services</label>
+                <textarea name="amenities" rows="7"><%= room.amenities.join('\n') %></textarea>
+                <span class="field-hint">Un élément par ligne</span>
+              </div>
+            </div>
+            <div class="form-actions" style="margin-top:1.5rem;">
+              <button type="submit" class="btn-admin-primary btn-lg">Enregistrer les modifications</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- COLONNE DROITE : photos + statut -->
+      <div style="display:flex; flex-direction:column; gap:1.5rem;">
+
+        <!-- Statut rapide -->
+        <div class="settings-card">
+          <h2 class="settings-section-title">Statut</h2>
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <span>
+              <span class="status-pill <%= room.active ? 'status-active' : 'status-inactive' %>">
+                <%= room.active ? 'Chambre active' : 'Chambre inactive' %>
+              </span>
+              <% if (room.featured) { %>
+              <span class="status-pill status-featured" style="margin-left:0.35rem;">⭐ En vedette</span>
+              <% } %>
+            </span>
+            <form method="POST" action="/admin/chambres/toggle/<%= room.id %>">
+              <button type="submit" class="btn-admin-ghost btn-sm">
+                <%= room.active ? 'Désactiver' : 'Activer' %>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Photos existantes -->
+        <div class="settings-card">
+          <h2 class="settings-section-title">Photos (<%= room.images.length %>)</h2>
+
+          <% if (room.images.length > 0) { %>
+          <div class="image-admin-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <% room.images.forEach((img, idx) => { %>
+            <div class="image-admin-thumb" id="thumb-<%= idx %>">
+              <img src="/image/<%= encodeURIComponent(img) %>" alt="Photo <%= idx+1 %>" loading="lazy">
+              <!-- État normal -->
+              <div class="image-admin-overlay" id="overlay-<%= idx %>">
+                <% if (idx === 0) { %><span class="image-main-badge">Principale</span><% } %>
+                <button type="button" class="image-delete-btn" onclick="askDelete(<%= idx %>)">🗑</button>
+              </div>
+              <!-- Confirmation inline -->
+              <div class="image-confirm" id="confirm-<%= idx %>" style="display:none;">
+                <p>Supprimer ?</p>
+                <div class="image-confirm-actions">
+                  <form method="POST" action="/admin/chambres/<%= room.id %>/images/delete">
+                    <input type="hidden" name="image" value="<%= img %>">
+                    <button type="submit" class="img-confirm-yes">Oui</button>
+                  </form>
+                  <button type="button" class="img-confirm-no" onclick="cancelDelete(<%= idx %>)">Non</button>
+                </div>
+              </div>
+            </div>
+            <% }) %>
+          </div>
+          <% } else { %>
+          <p style="color:var(--muted); font-size:0.88rem; margin-bottom:1rem;">Aucune photo pour l'instant.</p>
+          <% } %>
+
+          <!-- Upload -->
+          <form method="POST" action="/admin/chambres/<%= room.id %>/images"
+            enctype="multipart/form-data" style="margin-top:1.25rem; border-top:1px solid var(--border); padding-top:1.25rem;">
+            <p style="font-size:0.82rem; font-weight:600; color:var(--dark); margin-bottom:0.75rem;">Ajouter des photos</p>
+            <div class="upload-zone" id="uploadZone" style="padding:1.5rem 1rem;">
+              <div class="upload-zone-inner">
+                <div class="upload-icon" style="font-size:1.5rem;">🖼️</div>
+                <p style="font-size:0.88rem;"><strong>Glisser</strong> ou cliquer pour choisir</p>
+                <input type="file" name="images" id="imgInput" accept="image/*" multiple style="display:none;">
+                <button type="button" class="btn-admin-outline btn-sm" style="margin-top:0.5rem;"
+                  onclick="document.getElementById('imgInput').click()">Choisir des photos</button>
+              </div>
+            </div>
+            <div class="upload-preview" id="previewGrid" style="grid-template-columns: repeat(3,1fr); margin-top:0.75rem;"></div>
+            <button type="submit" class="btn-admin-primary btn-full" style="margin-top:0.75rem;">
+              Envoyer les photos
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="/js/admin.js"></script>
+<script>
+  /* ── Confirmation inline suppression photo ── */
+  function askDelete(idx) {
+    document.getElementById('overlay-' + idx).style.display = 'none';
+    document.getElementById('confirm-' + idx).style.display = 'flex';
+  }
+  function cancelDelete(idx) {
+    document.getElementById('confirm-' + idx).style.display = 'none';
+    document.getElementById('overlay-' + idx).style.display = 'flex';
+  }
+
+  /* ── Upload preview ── */
+  const input   = document.getElementById('imgInput');
+  const preview = document.getElementById('previewGrid');
+  const zone    = document.getElementById('uploadZone');
+
+  input.addEventListener('change', showPreviews);
+
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag-over');
+    const dt = new DataTransfer();
+    [...(input.files || []), ...e.dataTransfer.files].forEach(f => dt.items.add(f));
+    input.files = dt.files;
+    showPreviews();
+  });
+
+  function showPreviews() {
+    preview.innerHTML = '';
+    [...input.files].forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const div = document.createElement('div');
+        div.className = 'preview-thumb';
+        div.innerHTML = `<img src="${e.target.result}"><span>${file.name}</span>`;
+        preview.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+</script>
+</body>
+</html>

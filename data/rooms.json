@@ -1,0 +1,198 @@
+[
+  {
+    "id": "chambre-signature",
+    "name": "Chambre Signature",
+    "price": 45000,
+    "capacity": 4,
+    "bedType": "Lit queen size",
+    "desc": "Ambiance douce et lumineuse, idéale pour un séjour en couple avec un confort premium. Décoration soignée mêlant chaleur et modernité.",
+    "badge": "Populaire",
+    "composition": [
+      "Lit queen size",
+      "Salle de bain privative avec douche",
+      "Coin bureau",
+      "Armoire de rangement spacieuse",
+      "Miroir grand format"
+    ],
+    "amenities": [
+      "Wi-Fi haut débit",
+      "Climatisation",
+      "TV écran plat",
+      "Eau chaude 24h/24",
+      "Service ménage quotidien",
+      "Serviettes & produits de bain"
+    ],
+    "images": [
+      "IMG_0457 Large.jpeg",
+      "IMG_0458 Large.jpeg",
+      "IMG_0459 Large.jpeg",
+      "IMG_0460 Large.jpeg",
+      "IMG_0461 Large.jpeg",
+      "IMG_0462 Large.jpeg"
+    ],
+    "featured": true,
+    "active": true
+  },
+  {
+    "id": "chambre-confort",
+    "name": "Chambre Confort",
+    "price": 38000,
+    "capacity": 2,
+    "bedType": "Lit double",
+    "desc": "Un espace calme avec décoration chaleureuse, parfait pour un séjour business ou détente.",
+    "badge": "",
+    "composition": [
+      "Lit double",
+      "Salle de bain privative",
+      "Espace travail",
+      "Rangements pratiques"
+    ],
+    "amenities": [
+      "Wi-Fi",
+      "Climatisation",
+      "TV",
+      "Petit-déjeuner disponible",
+      "Service blanchisserie sur demande"
+    ],
+    "images": [
+      "IMG_0463 Large.jpeg",
+      "IMG_0465 Large.jpeg",
+      "IMG_0466 Large.jpeg",
+      "IMG_0470 Large.jpeg",
+      "IMG_0471 Large.jpeg"
+    ],
+    "featured": false,
+    "active": true
+  },
+  {
+    "id": "chambre-jardin",
+    "name": "Chambre Jardin",
+    "price": 42000,
+    "capacity": 2,
+    "bedType": "Lit double",
+    "desc": "Vue apaisante sur les extérieurs et atmosphère intimiste pour un séjour reposant.",
+    "badge": "",
+    "composition": [
+      "Lit double",
+      "Salle de bain privative",
+      "Vue sur le jardin",
+      "Coin lecture"
+    ],
+    "amenities": [
+      "Wi-Fi",
+      "Climatisation",
+      "TV",
+      "Accès jardin",
+      "Service en chambre"
+    ],
+    "images": [
+      "IMG_0473 Large.jpeg",
+      "IMG_0474 Large.jpeg",
+      "IMG_0475 Large.jpeg",
+      "IMG_0476 Large.jpeg",
+      "IMG_0477 Large.jpeg"
+    ],
+    "featured": false,
+    "active": true
+  },
+  {
+    "id": "suite-stella",
+    "name": "Suite Stella",
+    "price": 58000,
+    "capacity": 3,
+    "bedType": "Lit king size",
+    "desc": "Suite spacieuse avec coin salon et prestations haut de gamme pour une expérience complète.",
+    "badge": "Suite",
+    "composition": [
+      "Lit king size",
+      "Salon privé avec canapé",
+      "Salle de bain premium",
+      "Espace dressing",
+      "Bureau et espace détente"
+    ],
+    "amenities": [
+      "Wi-Fi premium",
+      "Climatisation",
+      "Smart TV",
+      "Mini bar",
+      "Accueil personnalisé",
+      "Peignoirs & chaussons"
+    ],
+    "images": [
+      "IMG_0478 Large.jpeg",
+      "IMG_0480 Large.jpeg",
+      "IMG_0485 Large.jpeg",
+      "IMG_0487 Large.jpeg",
+      "IMG_0491 Large.jpeg",
+      "IMG_0492 Large.jpeg"
+    ],
+    "featured": true,
+    "active": true
+  },
+  {
+    "id": "suite-prestige",
+    "name": "Suite Prestige",
+    "price": 68000,
+    "capacity": 4,
+    "bedType": "Lit king size",
+    "desc": "Notre plus grande suite, idéale pour les séjours longs ou les voyageurs exigeants.",
+    "badge": "Prestige",
+    "composition": [
+      "Lit king size",
+      "Grand salon",
+      "Salle de bain spacieuse avec baignoire",
+      "Espace repas",
+      "Double dressing"
+    ],
+    "amenities": [
+      "Wi-Fi premium",
+      "Climatisation",
+      "2 TV",
+      "Service prioritaire",
+      "Transfert aéroport sur demande",
+      "Petit-déjeuner inclus"
+    ],
+    "images": [
+      "IMG_0493 Large.jpeg",
+      "IMG_0494 Large.jpeg",
+      "IMG_0496 Large.jpeg",
+      "IMG_0497 Large.jpeg",
+      "IMG_0498 Large.jpeg",
+      "IMG_0499 Large.jpeg"
+    ],
+    "featured": true,
+    "active": true
+  },
+  {
+    "id": "chambre-familiale",
+    "name": "Chambre Familiale",
+    "price": 60000,
+    "capacity": 4,
+    "bedType": "2 lits",
+    "desc": "Configuration idéale pour les familles avec espace généreux et rangement pratique.",
+    "badge": "",
+    "composition": [
+      "2 lits (1 double + 1 simple)",
+      "Salle de bain privative",
+      "Espace enfants",
+      "Rangements multiples"
+    ],
+    "amenities": [
+      "Wi-Fi",
+      "Climatisation",
+      "TV",
+      "Service ménage",
+      "Petit-déjeuner famille"
+    ],
+    "images": [
+      "IMG_0500 Large.jpeg",
+      "IMG_0501 Large.jpeg",
+      "IMG_0502 Large.jpeg",
+      "IMG_0506 Large.jpeg",
+      "IMG_0507 Large.jpeg",
+      "IMG_0508 Large.jpeg"
+    ],
+    "featured": false,
+    "active": true
+  }
+]

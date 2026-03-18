@@ -1,0 +1,221 @@
+<%
+  title = 'Accueil';
+  body = '';
+%>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= settings.siteName %> – <%= settings.tagline %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+
+<%- include('partials/nav', { page, settings }) %>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg" style="background-image: url('/image/<%= encodeURIComponent(settings.heroImage) %>')"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Avepozo · Lomé, Togo</p>
+    <h1>Bienvenue à<br><span class="hero-name"><%= settings.siteName %></span></h1>
+    <p class="hero-sub"><%= settings.description %></p>
+    <div class="hero-search">
+      <form class="search-bar" action="/chambres" method="get">
+        <div class="search-field">
+          <label>Arrivée</label>
+          <input type="date" name="checkin" id="heroCheckin">
+        </div>
+        <div class="search-divider"></div>
+        <div class="search-field">
+          <label>Départ</label>
+          <input type="date" name="checkout" id="heroCheckout">
+        </div>
+        <div class="search-divider"></div>
+        <div class="search-field">
+          <label>Voyageurs</label>
+          <select name="guests">
+            <option value="1">1 personne</option>
+            <option value="2" selected>2 personnes</option>
+            <option value="3">3 personnes</option>
+            <option value="4">4 personnes</option>
+          </select>
+        </div>
+        <button type="submit" class="search-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Chercher
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- STATS STRIP -->
+<div class="stats-strip">
+  <div class="stat-item"><strong>7</strong><span>Chambres & suites</span></div>
+  <div class="stat-item"><strong>1</strong><span>Piscine privée</span></div>
+  <div class="stat-item"><strong>24/7</strong><span>Service disponible</span></div>
+  <div class="stat-item"><strong>5★</strong><span>Expérience premium</span></div>
+</div>
+
+<!-- ABOUT -->
+<section class="section" id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-images">
+        <div class="about-img-main">
+          <img src="/image/<%= encodeURIComponent(settings.heroImage) %>" alt="<%= settings.siteName %>" loading="lazy">
+        </div>
+        <div class="about-img-accent">
+          <img src="/image/IMG_0499%20Large.jpeg" alt="Détail" loading="lazy">
+        </div>
+      </div>
+      <div class="about-text">
+        <p class="eyebrow">Notre histoire</p>
+        <h2>Un lieu d'exception<br>à <span class="text-primary">Avepozo</span></h2>
+        <p class="body-text"><%= settings.aboutText %></p>
+        <p class="body-text"><%= settings.aboutText2 %></p>
+        <a href="/chambres" class="btn-primary" style="margin-top: 1.5rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+          Découvrir nos chambres →
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED ROOMS -->
+<section class="section section-gray" id="chambres-preview">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Nos hébergements</p>
+        <h2>Chambres & <span class="text-primary">Suites</span></h2>
+      </div>
+      <a href="/chambres" class="btn-outline">Tout voir</a>
+    </div>
+    <div class="rooms-grid">
+      <% featured.forEach(room => { %>
+      <a href="/chambre/<%= room.id %>" class="room-card">
+        <div class="room-card-img">
+          <img src="/image/<%= encodeURIComponent(room.images[0]) %>" alt="<%= room.name %>" loading="lazy">
+          <% if (room.badge) { %>
+          <span class="room-badge"><%= room.badge %></span>
+          <% } %>
+        </div>
+        <div class="room-card-body">
+          <div class="room-card-top">
+            <h3 class="room-card-name"><%= room.name %></h3>
+            <div class="room-card-rating">⭐ 4.9</div>
+          </div>
+          <p class="room-card-meta"><%= room.bedType %> · <%= room.capacity %> pers.</p>
+          <p class="room-card-desc"><%= room.desc.substring(0, 90) %>…</p>
+          <div class="room-card-footer">
+            <div class="room-card-price">
+              <strong><%= room.price.toLocaleString('fr-FR') %></strong>
+              <span>FCFA / nuit</span>
+            </div>
+            <span class="room-card-link">Voir →</span>
+          </div>
+        </div>
+      </a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="section" id="services">
+  <div class="container">
+    <div class="section-head-center">
+      <p class="eyebrow">Ce que nous offrons</p>
+      <h2>Tout pour votre <span class="text-primary">confort</span></h2>
+    </div>
+    <div class="services-grid">
+      <% settings.services.forEach(s => { %>
+      <div class="service-card">
+        <div class="service-icon"><%= s.icon %></div>
+        <h3 class="service-title"><%= s.title %></h3>
+        <p class="service-desc"><%= s.desc %></p>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-inner">
+      <div>
+        <h2>Prêt à vivre l'expérience<br><span class="text-primary"><%= settings.siteName %></span> ?</h2>
+        <p>Réservez votre chambre dès maintenant et profitez d'un séjour inoubliable.</p>
+      </div>
+      <div class="cta-actions">
+        <a href="/chambres" class="btn-primary btn-lg">Voir les chambres</a>
+        <a href="tel:<%= settings.phone.replace(/\s/g,'') %>" class="btn-outline btn-lg">Nous appeler</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="section" id="contact">
+  <div class="container">
+    <div class="contact-grid">
+      <div>
+        <p class="eyebrow">Contactez-nous</p>
+        <h2>Prenons <span class="text-primary">contact</span></h2>
+        <p class="body-text">Pour toute demande de réservation ou renseignement, notre équipe est disponible 7j/7.</p>
+        <div class="contact-list">
+          <div class="contact-item">
+            <div class="contact-icon">📍</div>
+            <div><strong>Adresse</strong><br><%= settings.address %></div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon">📞</div>
+            <div><strong>Téléphone / WhatsApp</strong><br><a href="tel:<%= settings.phone.replace(/\s/g,'') %>"><%= settings.phone %></a></div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon">🕐</div>
+            <div><strong>Horaires</strong><br>Ouvert 24h/24 · 7j/7</div>
+          </div>
+        </div>
+      </div>
+      <div class="contact-form-wrap">
+        <h3>Envoyer un message</h3>
+        <form class="contact-form" id="contactForm">
+          <div class="form-row">
+            <div class="field"><label>Prénom</label><input type="text" placeholder="Votre prénom" required></div>
+            <div class="field"><label>Nom</label><input type="text" placeholder="Votre nom" required></div>
+          </div>
+          <div class="field"><label>Téléphone</label><input type="tel" placeholder="+228 XX XX XX XX"></div>
+          <div class="field"><label>Message</label><textarea rows="4" placeholder="Votre message…" required></textarea></div>
+          <button class="btn-primary btn-full" type="submit">Envoyer le message</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer', { settings }) %>
+
+<script src="/js/main.js"></script>
+<script>
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('heroCheckin').min = today;
+  document.getElementById('heroCheckin').addEventListener('change', function() {
+    document.getElementById('heroCheckout').min = this.value;
+  });
+  document.getElementById('contactForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    alert('Message envoyé ✅\nNous vous répondrons très bientôt.');
+    this.reset();
+  });
+</script>
+</body>
+</html>

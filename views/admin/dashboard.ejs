@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Tableau de bord</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+
+<%- include('sidebar', { activePage: 'dashboard', settings }) %>
+
+<main class="admin-main">
+  <div class="admin-topbar">
+    <h1 class="admin-page-title">Tableau de bord</h1>
+    <a href="/" target="_blank" class="btn-admin-outline btn-sm">Voir le site →</a>
+  </div>
+  <div class="admin-content">
+
+    <div class="stats-cards">
+      <div class="stat-card">
+        <div class="stat-card-icon" style="background: #fff0f0; color: #FF385C;">🏠</div>
+        <div>
+          <div class="stat-card-num"><%= stats.totalRooms %></div>
+          <div class="stat-card-label">Chambres actives</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon" style="background: #f0f7ff; color: #0066cc;">📋</div>
+        <div>
+          <div class="stat-card-num"><%= stats.totalBookings %></div>
+          <div class="stat-card-label">Total réservations</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon" style="background: #fffbf0; color: #e6a000;">⏳</div>
+        <div>
+          <div class="stat-card-num"><%= stats.pendingBookings %></div>
+          <div class="stat-card-label">En attente</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon" style="background: #f0fff4; color: #00aa44;">✅</div>
+        <div>
+          <div class="stat-card-num"><%= stats.confirmedBookings %></div>
+          <div class="stat-card-label">Confirmées</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-section-title">Dernières réservations</div>
+
+    <% if (bookings.length === 0) { %>
+    <div class="empty-state">
+      <p>Aucune réservation pour l'instant.</p>
+      <a href="/chambres" target="_blank" class="btn-admin-primary">Voir les chambres →</a>
+    </div>
+    <% } else { %>
+    <div class="table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr><th>Client</th><th>Chambre</th><th>Arrivée</th><th>Départ</th><th>Téléphone</th><th>Statut</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+          <% bookings.forEach(b => { %>
+          <tr>
+            <td><strong><%= b.fullname || '—' %></strong></td>
+            <td><%= b.room %></td>
+            <td><%= b.checkin %></td>
+            <td><%= b.checkout %></td>
+            <td><%= b.phone || '—' %></td>
+            <td>
+              <span class="status-badge status-<%= b.status %>">
+                <%= b.status === 'pending' ? 'En attente' : b.status === 'confirmed' ? 'Confirmée' : 'Annulée' %>
+              </span>
+            </td>
+            <td>
+              <form method="POST" action="/admin/reservations/status/<%= b.id %>" style="display:inline">
+                <input type="hidden" name="status" value="confirmed">
+                <button type="submit" class="btn-xs btn-green" title="Confirmer">✓</button>
+              </form>
+              <form method="POST" action="/admin/reservations/status/<%= b.id %>" style="display:inline">
+                <input type="hidden" name="status" value="cancelled">
+                <button type="submit" class="btn-xs btn-red" title="Annuler">✗</button>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+
+    <div style="margin-top: 1.5rem;">
+      <a href="/admin/reservations" class="btn-admin-outline">Voir toutes les réservations →</a>
+    </div>
+
+  </div>
+</main>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

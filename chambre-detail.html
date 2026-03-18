@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chambre – Maison Stella</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold: #C9A96E;
+      --gold-light: #E8D5B0;
+      --dark: #1a1612;
+      --dark2: #2a241e;
+      --cream: #F7F2EA;
+      --text: #3d342a;
+      --muted: #7a6e63;
+      --line: rgba(201,169,110,0.22);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); overflow-x: hidden; }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.2rem 3rem;
+      background: rgba(26,22,18,0.95);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(201,169,110,0.2);
+    }
+    .nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 300; letter-spacing: 0.12em; color: var(--gold-light); text-decoration: none; }
+    .nav-logo span { color: var(--gold); font-style: italic; }
+    .nav-links { display: flex; gap: 2.2rem; list-style: none; }
+    .nav-links a { color: rgba(247,242,234,0.72); text-decoration: none; font-size: 0.74rem; letter-spacing: 0.13em; text-transform: uppercase; transition: color 0.25s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--gold); }
+    .nav-cta { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 0.55rem 1.5rem; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.3s; text-decoration: none; }
+    .nav-cta:hover { background: var(--gold); color: var(--dark); }
+    .nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+    .nav-burger span { display: block; width: 22px; height: 1.5px; background: var(--gold-light); }
+
+    /* HERO */
+    .room-hero {
+      margin-top: 72px;
+      height: 65vh; min-height: 420px;
+      position: relative;
+      overflow: hidden;
+    }
+    .room-hero-bg {
+      position: absolute; inset: 0;
+      background: center/cover no-repeat;
+      transition: transform 0.5s ease;
+    }
+    .room-hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(26,22,18,0.85) 0%, rgba(26,22,18,0.2) 60%, transparent 100%);
+    }
+    .room-hero-content {
+      position: absolute; bottom: 3rem; left: 3rem; right: 3rem;
+      display: flex; justify-content: space-between; align-items: flex-end;
+      flex-wrap: wrap; gap: 1.5rem;
+    }
+    .breadcrumb { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(247,242,234,0.55); margin-bottom: 0.8rem; }
+    .breadcrumb a { color: var(--gold); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .room-hero-name { font-family: 'Cormorant Garamond', serif; font-size: clamp(2.8rem, 6vw, 5rem); font-weight: 300; color: #fff; line-height: 1.05; }
+    .room-hero-meta { display: flex; gap: 1.2rem; margin-top: 0.6rem; flex-wrap: wrap; }
+    .room-hero-meta span { font-size: 0.78rem; color: rgba(247,242,234,0.7); letter-spacing: 0.1em; text-transform: uppercase; display: flex; align-items: center; gap: 0.35rem; }
+    .room-hero-price { text-align: right; }
+    .price-label { font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(247,242,234,0.5); margin-bottom: 0.3rem; }
+    .price-val { font-family: 'Cormorant Garamond', serif; font-size: 2.8rem; font-weight: 300; color: var(--gold); line-height: 1; }
+    .price-unit { font-size: 0.8rem; color: rgba(247,242,234,0.55); letter-spacing: 0.1em; }
+
+    /* LAYOUT */
+    .container { max-width: 1240px; margin: 0 auto; padding: 0 2.5rem; }
+    .main-layout { display: grid; grid-template-columns: 1fr 420px; gap: 4rem; padding: 4rem 0 6rem; align-items: start; }
+
+    /* GALLERY */
+    .gallery-section {}
+    .gallery-label { font-size: 0.68rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.7rem; }
+    .gallery-main { width: 100%; aspect-ratio: 16/9; overflow: hidden; cursor: pointer; margin-bottom: 0.6rem; }
+    .gallery-main img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+    .gallery-main:hover img { transform: scale(1.03); }
+    .gallery-thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; }
+    .thumb { aspect-ratio: 4/3; overflow: hidden; cursor: pointer; opacity: 0.65; transition: opacity 0.25s; border: 2px solid transparent; }
+    .thumb.active, .thumb:hover { opacity: 1; border-color: var(--gold); }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* DETAILS */
+    .details-section { margin-top: 3rem; }
+    .details-label { font-size: 0.68rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.7rem; }
+    .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .detail-block { background: #fff; border: 1px solid var(--line); padding: 1.5rem; }
+    .detail-block-title { font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; font-weight: 300; color: var(--dark); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; }
+    .detail-list { list-style: none; display: grid; gap: 0.5rem; }
+    .detail-list li { font-size: 0.88rem; color: var(--text); line-height: 1.5; display: flex; align-items: flex-start; gap: 0.6rem; }
+    .detail-list li::before { content: ''; display: block; width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex-shrink: 0; margin-top: 0.45rem; }
+    .room-desc-full { color: var(--muted); line-height: 1.85; font-size: 0.93rem; margin-top: 1rem; padding: 1.5rem; background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--gold); }
+
+    /* SIDEBAR – BOOKING */
+    .sidebar { position: sticky; top: 100px; }
+    .booking-card {
+      background: var(--dark);
+      border: 1px solid rgba(201,169,110,0.2);
+      overflow: hidden;
+    }
+    .booking-card-header {
+      padding: 1.8rem 1.8rem 1.4rem;
+      border-bottom: 1px solid rgba(201,169,110,0.15);
+    }
+    .booking-card-title { font-family: 'Cormorant Garamond', serif; font-size: 1.7rem; font-weight: 300; color: var(--cream); line-height: 1.1; }
+    .booking-card-title em { color: var(--gold); font-style: italic; }
+    .booking-card-note { font-size: 0.82rem; color: rgba(247,242,234,0.55); margin-top: 0.5rem; line-height: 1.6; }
+    .booking-form { padding: 1.6rem 1.8rem 2rem; display: grid; gap: 1rem; }
+    .field { display: flex; flex-direction: column; gap: 0.45rem; }
+    .field label { font-size: 0.64rem; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(247,242,234,0.5); }
+    .field input, .field select {
+      border: 1px solid rgba(201,169,110,0.22);
+      background: rgba(255,255,255,0.05);
+      color: var(--cream);
+      padding: 0.9rem 1rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.25s;
+      -webkit-appearance: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--gold); }
+    .field select option { background: var(--dark2); color: var(--cream); }
+    .nights-display { font-size: 0.82rem; color: var(--gold-light); text-align: right; min-height: 1.2rem; letter-spacing: 0.05em; }
+    .total-row { display: flex; justify-content: space-between; align-items: baseline; padding: 1rem 0; border-top: 1px solid rgba(201,169,110,0.15); border-bottom: 1px solid rgba(201,169,110,0.15); margin-top: 0.4rem; }
+    .total-label { font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(247,242,234,0.5); }
+    .total-amount { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 300; color: var(--gold); }
+    .total-unit { font-size: 0.75rem; color: rgba(247,242,234,0.4); letter-spacing: 0.1em; }
+    .submit-btn { border: none; background: var(--gold); color: var(--dark); padding: 1.1rem 2rem; font-family: 'DM Sans', sans-serif; font-size: 0.76rem; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; transition: background 0.25s; width: 100%; margin-top: 0.5rem; }
+    .submit-btn:hover { background: var(--gold-light); }
+    .contact-alt { text-align: center; margin-top: 1.2rem; font-size: 0.8rem; color: rgba(247,242,234,0.4); }
+    .contact-alt a { color: var(--gold); text-decoration: none; }
+    .contact-alt a:hover { text-decoration: underline; }
+
+    /* LIGHTBOX */
+    .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 999; align-items: center; justify-content: center; }
+    .lightbox.open { display: flex; }
+    .lightbox img { max-width: 90vw; max-height: 90vh; object-fit: contain; }
+    .lightbox-close { position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer; line-height: 1; opacity: 0.7; transition: opacity 0.2s; }
+    .lightbox-close:hover { opacity: 1; }
+    .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(201,169,110,0.3); border: none; color: #fff; font-size: 1.5rem; cursor: pointer; padding: 1rem 1.2rem; transition: background 0.2s; }
+    .lightbox-nav:hover { background: var(--gold); color: var(--dark); }
+    .lightbox-prev { left: 1.5rem; }
+    .lightbox-next { right: 1.5rem; }
+
+    footer { background: var(--dark); border-top: 1px solid rgba(201,169,110,0.15); padding: 2.5rem 0; }
+    .footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .footer-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 300; color: var(--gold-light); letter-spacing: 0.12em; text-decoration: none; }
+    .footer-logo span { color: var(--gold); font-style: italic; }
+    .footer-copy { color: rgba(247,242,234,0.3); font-size: 0.76rem; letter-spacing: 0.06em; }
+    .footer-links { display: flex; gap: 2rem; }
+    .footer-links a { color: rgba(247,242,234,0.4); font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; transition: color 0.25s; }
+    .footer-links a:hover { color: var(--gold); }
+
+    @media (max-width: 1050px) {
+      .main-layout { grid-template-columns: 1fr; gap: 2.5rem; }
+      .sidebar { position: static; }
+      .details-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .nav-links.open { display: flex; flex-direction: column; position: fixed; top: 64px; left: 0; right: 0; background: rgba(26,22,18,0.97); padding: 2rem; gap: 1.5rem; border-bottom: 1px solid rgba(201,169,110,0.2); z-index: 99; }
+      .nav-burger { display: flex; }
+      .container { padding: 0 1.3rem; }
+      .room-hero-content { left: 1.5rem; right: 1.5rem; bottom: 2rem; }
+      .gallery-thumbs { grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
+      .footer-inner { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Maison <span>Stella</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html#about">À propos</a></li>
+    <li><a href="index.html#gallery">Galerie</a></li>
+    <li><a href="nos-chambres.html" class="active">Nos chambres</a></li>
+    <li><a href="index.html#services">Services</a></li>
+    <li><a href="index.html#contact">Contact</a></li>
+  </ul>
+  <a href="#reservation" class="nav-cta">Réserver</a>
+  <div class="nav-burger" onclick="document.getElementById('navLinks').classList.toggle('open')">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<div class="room-hero" id="roomHero">
+  <div class="room-hero-bg" id="heroBg"></div>
+  <div class="room-hero-overlay"></div>
+  <div class="room-hero-content">
+    <div>
+      <div class="breadcrumb"><a href="nos-chambres.html">← Nos chambres</a></div>
+      <h1 class="room-hero-name" id="roomName">Chargement…</h1>
+      <div class="room-hero-meta" id="roomMeta"></div>
+    </div>
+    <div class="room-hero-price">
+      <div class="price-label">À partir de</div>
+      <div class="price-val" id="heroPrice">–</div>
+      <div class="price-unit">FCFA / nuit</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="main-layout">
+
+    <!-- LEFT -->
+    <div>
+      <!-- GALLERY -->
+      <div class="gallery-section">
+        <div class="gallery-label">✦ Galerie photos</div>
+        <div class="gallery-main" id="galleryMain" onclick="openLightbox(currentThumb)">
+          <img id="galleryMainImg" src="" alt="">
+        </div>
+        <div class="gallery-thumbs" id="galleryThumbs"></div>
+      </div>
+
+      <!-- DESCRIPTION -->
+      <p class="room-desc-full" id="roomDesc"></p>
+
+      <!-- DETAILS -->
+      <div class="details-section">
+        <div class="details-label">✦ Composition &amp; commodités</div>
+        <div class="details-grid">
+          <div class="detail-block">
+            <div class="detail-block-title">🛏 Composition</div>
+            <ul class="detail-list" id="compositionList"></ul>
+          </div>
+          <div class="detail-block">
+            <div class="detail-block-title">✨ Commodités</div>
+            <ul class="detail-list" id="amenitiesList"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="reservation">
+      <div class="booking-card">
+        <div class="booking-card-header">
+          <h2 class="booking-card-title">Réserver <em id="bookingRoomName">cette chambre</em></h2>
+          <p class="booking-card-note">Choisissez vos dates d'arrivée et de départ. Nous confirmons rapidement par téléphone ou WhatsApp.</p>
+        </div>
+        <form class="booking-form" id="bookingForm" onsubmit="sendReservation(event)">
+          <input type="hidden" id="selectedRoom">
+          <div class="field">
+            <label>Date d'arrivée</label>
+            <input type="date" id="checkin" required>
+          </div>
+          <div class="field">
+            <label>Date de départ</label>
+            <input type="date" id="checkout" required>
+          </div>
+          <div class="nights-display" id="nightsDisplay"></div>
+          <div class="field">
+            <label>Nom complet</label>
+            <input type="text" id="fullname" placeholder="Votre nom" required>
+          </div>
+          <div class="field">
+            <label>Téléphone</label>
+            <input type="tel" id="phone" placeholder="+228 XX XX XX XX">
+          </div>
+          <div class="total-row">
+            <div>
+              <div class="total-label">Total estimé</div>
+              <div class="total-unit" id="totalUnit">–</div>
+            </div>
+            <div class="total-amount" id="totalAmount">–</div>
+          </div>
+          <button class="submit-btn" type="submit">Confirmer la réservation</button>
+        </form>
+        <div class="contact-alt">Ou contactez-nous sur <a href="tel:+22871595136">+228 71 59 51 36</a></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightboxOnBg(event)">
+  <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <button class="lightbox-nav lightbox-prev" onclick="lightboxNav(-1)">‹</button>
+  <img id="lightboxImg" src="" alt="">
+  <button class="lightbox-nav lightbox-next" onclick="lightboxNav(1)">›</button>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <a href="index.html" class="footer-logo">Maison <span>Stella</span></a>
+      <nav class="footer-links">
+        <a href="index.html#about">À propos</a>
+        <a href="nos-chambres.html">Chambres</a>
+        <a href="index.html#services">Services</a>
+        <a href="index.html#contact">Contact</a>
+      </nav>
+      <p class="footer-copy">© 2026 Maison Stella · Avepozo, Lomé, Togo</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const rooms = {
+    'chambre-signature': {
+      name: 'Chambre Signature',
+      price: 45000,
+      meta: ['👤 2 personnes', '🛏 Lit queen size'],
+      badge: 'Populaire',
+      desc: 'Ambiance douce et lumineuse, idéale pour un séjour en couple avec un confort premium. Décoration soignée mêlant chaleur et modernité, cette chambre invite à la sérénité dès le premier regard.',
+      composition: ['Lit queen size', 'Salle de bain privative avec douche', 'Coin bureau', 'Armoire de rangement spacieuse', 'Miroir grand format'],
+      amenities: ['Wi‑Fi haut débit', 'Climatisation', 'TV écran plat', 'Eau chaude 24h/24', 'Service ménage quotidien', 'Serviettes & produits de bain'],
+      images: ['image/IMG_0457%20Large.jpeg','image/IMG_0458%20Large.jpeg','image/IMG_0459%20Large.jpeg','image/IMG_0460%20Large.jpeg','image/IMG_0461%20Large.jpeg','image/IMG_0462%20Large.jpeg']
+    },
+    'chambre-confort': {
+      name: 'Chambre Confort',
+      price: 38000,
+      meta: ['👤 2 personnes', '🛏 Lit double'],
+      desc: 'Un espace calme avec décoration chaleureuse, parfait pour un séjour business ou détente. Tout le nécessaire est réuni pour que votre séjour se déroule dans les meilleures conditions.',
+      composition: ['Lit double', 'Salle de bain privative', 'Espace travail', 'Rangements pratiques'],
+      amenities: ['Wi‑Fi', 'Climatisation', 'TV', 'Petit-déjeuner disponible', 'Service blanchisserie sur demande'],
+      images: ['image/IMG_0463%20Large.jpeg','image/IMG_0465%20Large.jpeg','image/IMG_0466%20Large.jpeg','image/IMG_0470%20Large.jpeg','image/IMG_0471%20Large.jpeg']
+    },
+    'chambre-jardin': {
+      name: 'Chambre Jardin',
+      price: 42000,
+      meta: ['👤 2 personnes', '🌿 Vue jardin'],
+      desc: 'Vue apaisante sur les extérieurs et atmosphère intimiste pour un séjour reposant. La verdure du jardin et la lumière naturelle en font un espace de décompression idéal.',
+      composition: ['Lit double', 'Salle de bain privative', 'Vue sur le jardin', 'Coin lecture'],
+      amenities: ['Wi‑Fi', 'Climatisation', 'TV', 'Accès jardin', 'Service en chambre'],
+      images: ['image/IMG_0473%20Large.jpeg','image/IMG_0474%20Large.jpeg','image/IMG_0475%20Large.jpeg','image/IMG_0476%20Large.jpeg','image/IMG_0477%20Large.jpeg']
+    },
+    'suite-stella': {
+      name: 'Suite Stella',
+      price: 58000,
+      meta: ['👤 3 personnes', '🛋 Salon privé', '🛏 Lit king'],
+      desc: 'Suite spacieuse avec coin salon et prestations haut de gamme pour une expérience complète. Le summum du confort à Maison Stella, avec des finitions soignées dans chaque détail.',
+      composition: ['Lit king size', 'Salon privé avec canapé', 'Salle de bain premium', 'Espace dressing', 'Bureau et espace détente'],
+      amenities: ['Wi‑Fi premium', 'Climatisation', 'Smart TV', 'Mini bar', 'Accueil personnalisé', 'Peignoirs & chaussons'],
+      images: ['image/IMG_0478%20Large.jpeg','image/IMG_0480%20Large.jpeg','image/IMG_0485%20Large.jpeg','image/IMG_0487%20Large.jpeg','image/IMG_0491%20Large.jpeg','image/IMG_0492%20Large.jpeg']
+    },
+    'suite-prestige': {
+      name: 'Suite Prestige',
+      price: 68000,
+      meta: ['👤 4 personnes', '🛏 Lit king', '🛋 Grand salon'],
+      desc: 'Notre plus grande suite, idéale pour les séjours longs ou les voyageurs exigeants. Un espace de vie complet où chaque détail a été pensé pour votre confort absolu.',
+      composition: ['Lit king size', 'Grand salon', 'Salle de bain spacieuse avec baignoire', 'Espace repas', 'Double dressing'],
+      amenities: ['Wi‑Fi premium', 'Climatisation', '2 TV', 'Service prioritaire', 'Transfert aéroport sur demande', 'Petit-déjeuner inclus'],
+      images: ['image/IMG_0493%20Large.jpeg','image/IMG_0494%20Large.jpeg','image/IMG_0496%20Large.jpeg','image/IMG_0497%20Large.jpeg','image/IMG_0498%20Large.jpeg','image/IMG_0499%20Large.jpeg']
+    },
+    'chambre-familiale': {
+      name: 'Chambre Familiale',
+      price: 60000,
+      meta: ['👤 4 personnes', '🛏 2 lits'],
+      desc: 'Configuration idéale pour les familles avec espace généreux et rangement pratique. Pensée pour le confort de tous, adultes comme enfants, avec tout l\'espace nécessaire.',
+      composition: ['2 lits (1 double + 1 simple)', 'Salle de bain privative', 'Espace enfants', 'Rangements multiples'],
+      amenities: ['Wi‑Fi', 'Climatisation', 'TV', 'Service ménage', 'Petit-déjeuner famille'],
+      images: ['image/IMG_0500%20Large.jpeg','image/IMG_0501%20Large.jpeg','image/IMG_0502%20Large.jpeg','image/IMG_0506%20Large.jpeg','image/IMG_0507%20Large.jpeg','image/IMG_0508%20Large.jpeg']
+    }
+  };
+
+  // Load room from URL param
+  const params = new URLSearchParams(window.location.search);
+  const roomKey = params.get('room') || 'chambre-signature';
+  const room = rooms[roomKey] || rooms['chambre-signature'];
+
+  // Populate page
+  document.title = room.name + ' – Maison Stella';
+  document.getElementById('roomName').textContent = room.name;
+  document.getElementById('heroPrice').textContent = room.price.toLocaleString('fr-FR');
+  document.getElementById('bookingRoomName').textContent = room.name;
+  document.getElementById('selectedRoom').value = room.name;
+  document.getElementById('roomDesc').textContent = room.desc;
+
+  // Meta
+  const metaEl = document.getElementById('roomMeta');
+  room.meta.forEach(m => {
+    const span = document.createElement('span');
+    span.textContent = m;
+    metaEl.appendChild(span);
+  });
+
+  // Hero BG
+  document.getElementById('heroBg').style.background = `url('${room.images[0]}') center/cover no-repeat`;
+
+  // Gallery
+  let currentThumb = 0;
+  const mainImg = document.getElementById('galleryMainImg');
+  const thumbsEl = document.getElementById('galleryThumbs');
+
+  function setActive(idx) {
+    currentThumb = idx;
+    mainImg.src = room.images[idx];
+    mainImg.alt = room.name + ' – photo ' + (idx + 1);
+    thumbsEl.querySelectorAll('.thumb').forEach((t, i) => t.classList.toggle('active', i === idx));
+  }
+
+  room.images.forEach((src, i) => {
+    const div = document.createElement('div');
+    div.className = 'thumb' + (i === 0 ? ' active' : '');
+    const img = document.createElement('img');
+    img.src = src; img.alt = room.name; img.loading = 'lazy';
+    img.onerror = () => { img.src = 'image/IMG_0465%20Large.jpeg'; };
+    div.appendChild(img);
+    div.addEventListener('click', () => setActive(i));
+    thumbsEl.appendChild(div);
+  });
+  setActive(0);
+
+  // Lists
+  function fillList(id, items) {
+    const ul = document.getElementById(id);
+    items.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      ul.appendChild(li);
+    });
+  }
+  fillList('compositionList', room.composition);
+  fillList('amenitiesList', room.amenities);
+
+  // Lightbox
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+
+  function openLightbox(idx) {
+    currentThumb = idx;
+    lightboxImg.src = room.images[idx];
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function closeLightboxOnBg(e) { if (e.target === lightbox) closeLightbox(); }
+  function lightboxNav(dir) {
+    currentThumb = (currentThumb + dir + room.images.length) % room.images.length;
+    lightboxImg.src = room.images[currentThumb];
+    setActive(currentThumb);
+  }
+  document.addEventListener('keydown', e => {
+    if (!lightbox.classList.contains('open')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowRight') lightboxNav(1);
+    if (e.key === 'ArrowLeft') lightboxNav(-1);
+  });
+  document.getElementById('galleryMain').addEventListener('click', () => openLightbox(currentThumb));
+
+  // Booking dates
+  const today = new Date().toISOString().split('T')[0];
+  const checkin = document.getElementById('checkin');
+  const checkout = document.getElementById('checkout');
+  checkin.min = today;
+
+  function updateTotal() {
+    const i = checkin.value, o = checkout.value;
+    if (!i || !o || o <= i) {
+      document.getElementById('nightsDisplay').textContent = '';
+      document.getElementById('totalAmount').textContent = '–';
+      document.getElementById('totalUnit').textContent = '–';
+      return;
+    }
+    const nights = Math.round((new Date(o) - new Date(i)) / 86400000);
+    const total = nights * room.price;
+    document.getElementById('nightsDisplay').textContent = nights + ' nuit' + (nights > 1 ? 's' : '');
+    document.getElementById('totalAmount').textContent = total.toLocaleString('fr-FR');
+    document.getElementById('totalUnit').textContent = 'FCFA pour ' + nights + ' nuit' + (nights > 1 ? 's' : '');
+  }
+
+  checkin.addEventListener('change', () => {
+    checkout.min = checkin.value || today;
+    updateTotal();
+  });
+  checkout.addEventListener('change', updateTotal);
+
+  function sendReservation(e) {
+    e.preventDefault();
+    const inDate = checkin.value, outDate = checkout.value;
+    if (outDate <= inDate) {
+      alert('La date de départ doit être après la date d\'arrivée.');
+      return;
+    }
+    const nights = Math.round((new Date(outDate) - new Date(inDate)) / 86400000);
+    const total = (nights * room.price).toLocaleString('fr-FR');
+    alert(
+      'Demande envoyée ✅\n\n' +
+      'Chambre : ' + room.name + '\n' +
+      'Arrivée : ' + inDate + '\n' +
+      'Départ : ' + outDate + '\n' +
+      'Durée : ' + nights + ' nuit' + (nights > 1 ? 's' : '') + '\n' +
+      'Total estimé : ' + total + ' FCFA\n\n' +
+      'Nous vous contactons très vite pour confirmation.'
+    );
+  }
+</script>
+</body>
+</html>

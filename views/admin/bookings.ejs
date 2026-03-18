@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Réservations</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+
+<%- include('sidebar', { activePage: 'bookings', settings }) %>
+
+<main class="admin-main">
+  <div class="admin-topbar">
+    <h1 class="admin-page-title">Réservations</h1>
+    <span class="topbar-count"><%= bookings.length %> demande<%= bookings.length !== 1 ? 's' : '' %></span>
+  </div>
+  <div class="admin-content">
+
+    <% if (bookings.length === 0) { %>
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <p>Aucune réservation reçue pour l'instant.</p>
+    </div>
+    <% } else { %>
+    <div class="table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Chambre</th>
+            <th>Arrivée</th>
+            <th>Départ</th>
+            <th>Téléphone</th>
+            <th>Date demande</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% bookings.forEach(b => { %>
+          <tr class="<%= b.status === 'cancelled' ? 'row-cancelled' : '' %>">
+            <td><strong><%= b.fullname || '—' %></strong></td>
+            <td><%= b.room %></td>
+            <td><%= b.checkin %></td>
+            <td><%= b.checkout %></td>
+            <td>
+              <% if (b.phone) { %>
+              <a href="tel:<%= b.phone.replace(/\s/g,'') %>"><%= b.phone %></a>
+              <% } else { %>—<% } %>
+            </td>
+            <td><%= new Date(b.createdAt).toLocaleDateString('fr-FR') %></td>
+            <td>
+              <span class="status-badge status-<%= b.status %>">
+                <%= b.status === 'pending' ? 'En attente' : b.status === 'confirmed' ? 'Confirmée' : 'Annulée' %>
+              </span>
+            </td>
+            <td class="actions-cell">
+              <% if (b.status !== 'confirmed') { %>
+              <form method="POST" action="/admin/reservations/status/<%= b.id %>" style="display:inline">
+                <input type="hidden" name="status" value="confirmed">
+                <button type="submit" class="btn-xs btn-green" title="Confirmer">✓ Confirmer</button>
+              </form>
+              <% } %>
+              <% if (b.status !== 'cancelled') { %>
+              <form method="POST" action="/admin/reservations/status/<%= b.id %>" style="display:inline">
+                <input type="hidden" name="status" value="cancelled">
+                <button type="submit" class="btn-xs btn-orange" title="Annuler">✗ Annuler</button>
+              </form>
+              <% } %>
+              <form method="POST" action="/admin/reservations/delete/<%= b.id %>" style="display:inline" onsubmit="return confirm('Supprimer cette réservation ?')">
+                <button type="submit" class="btn-xs btn-red" title="Supprimer">🗑</button>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+
+  </div>
+</main>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

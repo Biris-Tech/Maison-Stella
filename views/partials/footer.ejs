@@ -1,0 +1,27 @@
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="/" class="footer-logo"><span class="logo-icon">⭐</span> <%= settings.siteName %></a>
+      <p class="footer-desc"><%= settings.tagline %></p>
+    </div>
+    <div class="footer-links-group">
+      <h4>Navigation</h4>
+      <a href="/">Accueil</a>
+      <a href="/chambres">Nos chambres</a>
+      <a href="/#services">Services</a>
+    </div>
+    <div class="footer-links-group">
+      <h4>Contact</h4>
+      <a href="tel:<%= settings.phone.replace(/\s/g,'') %>"><%= settings.phone %></a>
+      <a href="mailto:<%= settings.email %>"><%= settings.email %></a>
+      <span><%= settings.address %></span>
+    </div>
+    <div class="footer-links-group">
+      <h4>Gestion</h4>
+      <a href="/admin">Administration</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© <%= new Date().getFullYear() %> <%= settings.siteName %> · Tous droits réservés · Avepozo, Lomé, Togo</p>
+  </div>
+</footer>

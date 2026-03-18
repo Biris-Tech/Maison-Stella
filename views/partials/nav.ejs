@@ -1,0 +1,20 @@
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <span class="logo-icon">⭐</span>
+      <%= settings.siteName %>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="/" class="<%= page === 'home' ? 'active' : '' %>">Accueil</a></li>
+      <li><a href="/chambres" class="<%= page === 'rooms' ? 'active' : '' %>">Nos chambres</a></li>
+      <li><a href="/#services">Services</a></li>
+      <li><a href="/#contact">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="/chambres" class="btn-nav">Réserver</a>
+      <button class="nav-burger" id="navBurger">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>

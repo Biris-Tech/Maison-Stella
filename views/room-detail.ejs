@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= room.name %> – <%= settings.siteName %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <% if (paypalClientId) { %>
+  <script src="https://www.paypal.com/sdk/js?client-id=<%= paypalClientId %>&currency=EUR" defer></script>
+  <% } %>
+</head>
+<body>
+
+<%- include('partials/nav', { page, settings }) %>
+
+<div class="detail-page">
+  <div class="container" style="padding-top: 6rem;">
+    <div class="detail-header">
+      <div>
+        <p class="breadcrumb"><a href="/">Accueil</a> / <a href="/chambres">Chambres</a> / <%= room.name %></p>
+        <h1><%= room.name %></h1>
+        <div class="detail-meta-row">
+          <span class="detail-rating">⭐ 4.9 · <a href="#">12 avis</a></span>
+          <span>·</span>
+          <span><%= settings.address %></span>
+          <% if (room.badge) { %><span class="detail-badge"><%= room.badge %></span><% } %>
+        </div>
+      </div>
+      <button class="share-btn" onclick="copyLink()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Partager
+      </button>
+    </div>
+
+    <!-- GALLERY -->
+    <div class="detail-gallery">
+      <div class="gallery-main-slot" id="galleryMain" onclick="openLightbox(0)">
+        <img id="mainImg" src="/image/<%= encodeURIComponent(room.images[0]) %>" alt="<%= room.name %>">
+        <button class="gallery-all-btn" onclick="event.stopPropagation(); openLightbox(0)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Voir tout
+        </button>
+      </div>
+      <div class="gallery-side">
+        <% room.images.slice(1, 5).forEach((img, i) => { %>
+        <div class="gallery-thumb" onclick="setMainImg(<%= i+1 %>)">
+          <img src="/image/<%= encodeURIComponent(img) %>" alt="<%= room.name %>" loading="lazy">
+        </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="detail-layout">
+
+      <!-- LEFT CONTENT -->
+      <div class="detail-content">
+        <div class="detail-intro">
+          <div>
+            <h2>Chambre chez <%= settings.siteName %></h2>
+            <p class="detail-specs"><%= room.capacity %> voyageur<%= room.capacity > 1 ? 's' : '' %> · <%= room.bedType %></p>
+          </div>
+          <img src="/image/<%= encodeURIComponent(room.images[0]) %>" alt="hôte" class="host-avatar">
+        </div>
+        <hr class="divider">
+
+        <p class="detail-desc"><%= room.desc %></p>
+        <hr class="divider">
+
+        <div class="detail-section">
+          <h3>Ce que propose ce logement</h3>
+          <div class="amenities-grid">
+            <% room.composition.forEach(item => { %>
+            <div class="amenity-item">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="20 6 9 17 4 12"/></svg>
+              <%= item %>
+            </div>
+            <% }) %>
+            <% room.amenities.forEach(item => { %>
+            <div class="amenity-item">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="20 6 9 17 4 12"/></svg>
+              <%= item %>
+            </div>
+            <% }) %>
+          </div>
+        </div>
+        <hr class="divider">
+
+        <div class="detail-section">
+          <h3>⭐ 4.9 · <span style="font-weight:400; color: var(--muted)">12 avis</span></h3>
+          <div class="reviews-grid">
+            <div class="review-card">
+              <div class="review-author">
+                <div class="review-avatar">K</div>
+                <div><strong>Kossi A.</strong><br><small>Mars 2026</small></div>
+              </div>
+              <p>"Séjour excellent, chambre propre et personnel aux petits soins. Je recommande vivement Maison Stella !"</p>
+            </div>
+            <div class="review-card">
+              <div class="review-author">
+                <div class="review-avatar">A</div>
+                <div><strong>Ama S.</strong><br><small>Février 2026</small></div>
+              </div>
+              <p>"Cadre magnifique, piscine superbe. La chambre était exactement comme sur les photos. Parfait !"</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOOKING + PAYMENT SIDEBAR -->
+      <div class="booking-sidebar">
+        <div class="booking-card" id="bookingCard">
+          <div class="booking-price-row">
+            <span class="booking-price"><%= room.price.toLocaleString('fr-FR') %> <small>FCFA</small></span>
+            <span class="booking-per">/ nuit</span>
+          </div>
+          <div class="booking-rating">⭐ 4.9 · 12 avis</div>
+
+          <!-- ÉTAPE 1 : Formulaire -->
+          <div id="stepForm">
+            <div class="date-fields">
+              <div class="date-field">
+                <label>ARRIVÉE</label>
+                <input type="date" id="checkin" required>
+              </div>
+              <div class="date-field-divider"></div>
+              <div class="date-field">
+                <label>DÉPART</label>
+                <input type="date" id="checkout" required>
+              </div>
+            </div>
+            <div class="guests-field">
+              <label>VOYAGEURS</label>
+              <select id="guests">
+                <% for(let i=1; i<=room.capacity; i++) { %>
+                <option value="<%= i %>"><%= i %> voyageur<%= i > 1 ? 's' : '' %></option>
+                <% } %>
+              </select>
+            </div>
+            <div class="field mt-sm">
+              <label class="field-label">NOM COMPLET</label>
+              <input type="text" id="fullname" placeholder="Votre nom complet" class="input-full" required>
+            </div>
+            <div class="field mt-sm">
+              <label class="field-label">TÉLÉPHONE</label>
+              <input type="tel" id="phone" placeholder="+228 XX XX XX XX" class="input-full">
+            </div>
+            <div class="field mt-sm">
+              <label class="field-label">E-MAIL</label>
+              <input type="email" id="email" placeholder="email@exemple.com" class="input-full">
+            </div>
+
+            <div class="price-breakdown" id="priceBreakdown" style="display:none;">
+              <div class="price-line">
+                <span><%= room.price.toLocaleString('fr-FR') %> FCFA × <span id="nightsCount">0</span> nuit(s)</span>
+                <span id="priceLineTotal">–</span>
+              </div>
+              <div class="price-line" style="font-size:0.82rem; color: var(--muted);">
+                <span>Équivalent PayPal</span>
+                <span id="priceEur">–</span>
+              </div>
+              <div class="price-line price-total">
+                <strong>Total XOF</strong>
+                <strong id="totalPriceDisplay">–</strong>
+              </div>
+            </div>
+
+            <div id="formError" class="form-error" style="display:none;"></div>
+
+            <button class="btn-primary btn-full btn-lg" style="margin-top:1rem;" onclick="proceedToPayment()">
+              Procéder au paiement →
+            </button>
+          </div>
+
+          <!-- ÉTAPE 2 : Choix du paiement -->
+          <div id="stepPayment" style="display:none;">
+            <div class="payment-recap">
+              <div class="payment-recap-row">
+                <span id="recapRoom"><%= room.name %></span>
+                <strong id="recapTotal">–</strong>
+              </div>
+              <div class="payment-recap-dates" id="recapDates">–</div>
+            </div>
+
+            <p class="payment-choose-label">Choisissez votre mode de paiement</p>
+
+            <!-- FedaPay -->
+            <div class="payment-option-card" id="fedapayOption">
+              <div class="payment-option-header">
+                <div class="payment-option-info">
+                  <img src="https://fedapay.com/wp-content/uploads/2022/06/logo-fedapay.png" alt="FedaPay" height="22" style="border-radius:3px;" onerror="this.style.display='none'">
+                  <div>
+                    <strong>Mobile Money · Carte</strong>
+                    <small>Flooz · T-Money · Visa · Mastercard</small>
+                  </div>
+                </div>
+                <span class="payment-badge-local">Local</span>
+              </div>
+              <form id="fedapayForm" method="POST" action="/payment/fedapay/init">
+                <input type="hidden" name="room" value="<%= room.name %>">
+                <input type="hidden" name="roomId" value="<%= room.id %>">
+                <input type="hidden" id="fp_checkin" name="checkin">
+                <input type="hidden" id="fp_checkout" name="checkout">
+                <input type="hidden" id="fp_fullname" name="fullname">
+                <input type="hidden" id="fp_phone" name="phone">
+                <input type="hidden" id="fp_email" name="email">
+                <input type="hidden" id="fp_guests" name="guests">
+                <input type="hidden" id="fp_nights" name="nights">
+                <input type="hidden" id="fp_totalAmount" name="totalAmount">
+                <button type="submit" class="btn-fedapay" onclick="return fillFedapay()">
+                  Payer avec FedaPay
+                </button>
+              </form>
+            </div>
+
+            <% if (paypalClientId) { %>
+            <!-- PayPal -->
+            <div class="payment-option-card">
+              <div class="payment-option-header">
+                <div class="payment-option-info">
+                  <svg height="22" viewBox="0 0 124 33" xmlns="http://www.w3.org/2000/svg"><path fill="#003087" d="M46.2 8.7c-.7 0-1.3.5-1.4 1.2l-3.2 20.4c-.1.5.3 1 .8 1h2.5c.7 0 1.3-.5 1.4-1.2l.9-5.7c.1-.7.7-1.2 1.4-1.2h3.1c4.6 0 7.3-2.2 8-6.6.3-1.9 0-3.4-.9-4.5-1-1.1-2.8-1.7-5.1-1.7h-7.5zm.8 3.5h3.2c1.3 0 2.2.3 2.7.8.5.5.6 1.3.4 2.5-.6 3.1-2.4 3.1-4.4 3.1H46l.9-6.4z"/><path fill="#009cde" d="M71.7 8.7c-.7 0-1.3.5-1.4 1.2l-3.2 20.4c-.1.5.3 1 .8 1h2.5c.7 0 1.3-.5 1.4-1.2l.9-5.7c.1-.7.7-1.2 1.4-1.2h3.1c4.6 0 7.3-2.2 8-6.6.3-1.9 0-3.4-.9-4.5-1-1.1-2.8-1.7-5.1-1.7h-7.5zm.8 3.5h3.2c1.3 0 2.2.3 2.7.8.5.5.6 1.3.4 2.5-.6 3.1-2.4 3.1-4.4 3.1H71l.9-6.4z"/></svg>
+                  <div>
+                    <strong>PayPal</strong>
+                    <small>Paiement international en EUR</small>
+                  </div>
+                </div>
+                <span class="payment-badge-intl">Intl.</span>
+              </div>
+              <div id="paypal-button-container"></div>
+            </div>
+            <% } %>
+
+            <button class="btn-admin-ghost btn-full" style="margin-top:0.75rem; font-family: var(--font);" onclick="backToForm()">
+              ← Modifier mes infos
+            </button>
+          </div>
+
+          <p class="booking-note">Paiement sécurisé · Confirmation immédiate</p>
+        </div>
+
+        <div class="contact-card">
+          <p>Préférez appeler ?</p>
+          <a href="tel:<%= settings.phone.replace(/\s/g,'') %>" class="btn-outline btn-full">
+            📞 <%= settings.phone %>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightboxBg(event)">
+  <button class="lb-close" onclick="closeLightbox()">✕</button>
+  <button class="lb-nav lb-prev" onclick="lbNav(-1)">‹</button>
+  <img id="lbImg" src="" alt="">
+  <button class="lb-nav lb-next" onclick="lbNav(1)">›</button>
+  <div class="lb-counter" id="lbCounter"></div>
+</div>
+
+<%- include('partials/footer', { settings }) %>
+<script src="/js/main.js"></script>
+<script>
+  const images       = <%- JSON.stringify(room.images) %>;
+  const pricePerNight = <%= room.price %>;
+  const XOF_TO_EUR    = 655.957;
+  let currentLbIdx = 0;
+  let totalAmount  = 0;
+  let nights       = 0;
+
+  /* ── GALLERY ── */
+  function setMainImg(idx) {
+    currentLbIdx = idx;
+    document.getElementById('mainImg').src = '/image/' + encodeURIComponent(images[idx]);
+    document.querySelectorAll('.gallery-thumb').forEach((t, i) => t.classList.toggle('active', i === idx - 1));
+  }
+  function openLightbox(idx) {
+    currentLbIdx = idx;
+    document.getElementById('lbImg').src = '/image/' + encodeURIComponent(images[idx]);
+    document.getElementById('lbCounter').textContent = (idx + 1) + ' / ' + images.length;
+    document.getElementById('lightbox').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); document.body.style.overflow = ''; }
+  function closeLightboxBg(e) { if (e.target === document.getElementById('lightbox')) closeLightbox(); }
+  function lbNav(dir) {
+    currentLbIdx = (currentLbIdx + dir + images.length) % images.length;
+    document.getElementById('lbImg').src = '/image/' + encodeURIComponent(images[currentLbIdx]);
+    document.getElementById('lbCounter').textContent = (currentLbIdx + 1) + ' / ' + images.length;
+  }
+  document.addEventListener('keydown', e => {
+    if (!document.getElementById('lightbox').classList.contains('open')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowRight') lbNav(1);
+    if (e.key === 'ArrowLeft') lbNav(-1);
+  });
+
+  /* ── PRIX ── */
+  const today = new Date().toISOString().split('T')[0];
+  const checkinEl  = document.getElementById('checkin');
+  const checkoutEl = document.getElementById('checkout');
+  checkinEl.min = today;
+
+  function updatePrice() {
+    const i = checkinEl.value, o = checkoutEl.value;
+    if (!i || !o || o <= i) { document.getElementById('priceBreakdown').style.display = 'none'; nights = 0; return; }
+    nights      = Math.round((new Date(o) - new Date(i)) / 86400000);
+    totalAmount = nights * pricePerNight;
+    const eur   = (totalAmount / XOF_TO_EUR).toFixed(2);
+    document.getElementById('nightsCount').textContent      = nights;
+    document.getElementById('priceLineTotal').textContent   = totalAmount.toLocaleString('fr-FR') + ' FCFA';
+    document.getElementById('totalPriceDisplay').textContent = totalAmount.toLocaleString('fr-FR') + ' FCFA';
+    document.getElementById('priceEur').textContent          = '≈ ' + eur + ' EUR';
+    document.getElementById('priceBreakdown').style.display  = 'block';
+  }
+  checkinEl.addEventListener('change',  () => { checkoutEl.min = checkinEl.value; updatePrice(); });
+  checkoutEl.addEventListener('change', updatePrice);
+
+  /* ── VALIDATION ── */
+  function validate() {
+    const errEl = document.getElementById('formError');
+    if (!checkinEl.value || !checkoutEl.value || checkoutEl.value <= checkinEl.value) {
+      errEl.textContent = 'Veuillez sélectionner des dates valides.'; errEl.style.display = 'block'; return false;
+    }
+    if (!document.getElementById('fullname').value.trim()) {
+      errEl.textContent = 'Veuillez saisir votre nom.'; errEl.style.display = 'block'; return false;
+    }
+    errEl.style.display = 'none';
+    return true;
+  }
+
+  /* ── ÉTAPE 2 : Afficher paiement ── */
+  function proceedToPayment() {
+    if (!validate()) return;
+    // Remplir le récap
+    document.getElementById('recapDates').textContent =
+      checkinEl.value + ' → ' + checkoutEl.value + ' (' + nights + ' nuit' + (nights > 1 ? 's' : '') + ')';
+    document.getElementById('recapTotal').textContent = totalAmount.toLocaleString('fr-FR') + ' FCFA';
+    document.getElementById('stepForm').style.display    = 'none';
+    document.getElementById('stepPayment').style.display = 'block';
+    // Init PayPal si disponible
+    initPayPal();
+  }
+  function backToForm() {
+    document.getElementById('stepForm').style.display    = 'block';
+    document.getElementById('stepPayment').style.display = 'none';
+  }
+
+  /* ── FEDAPAY ── */
+  function fillFedapay() {
+    document.getElementById('fp_checkin').value     = checkinEl.value;
+    document.getElementById('fp_checkout').value    = checkoutEl.value;
+    document.getElementById('fp_fullname').value    = document.getElementById('fullname').value;
+    document.getElementById('fp_phone').value       = document.getElementById('phone').value;
+    document.getElementById('fp_email').value       = document.getElementById('email').value;
+    document.getElementById('fp_guests').value      = document.getElementById('guests').value;
+    document.getElementById('fp_nights').value      = nights;
+    document.getElementById('fp_totalAmount').value = totalAmount;
+    return true;
+  }
+
+  /* ── PAYPAL ── */
+  let paypalInited = false;
+  function initPayPal() {
+    if (paypalInited || typeof paypal === 'undefined') return;
+    paypalInited = true;
+    paypal.Buttons({
+      createOrder: async () => {
+        const amountEur = (totalAmount / XOF_TO_EUR).toFixed(2);
+        const res = await fetch('/payment/paypal/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amountEur })
+        });
+        const data = await res.json();
+        return data.id;
+      },
+      onApprove: async (data) => {
+        const res = await fetch('/payment/paypal/capture', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderID:     data.orderID,
+            room:        '<%= room.name %>',
+            roomId:      '<%= room.id %>',
+            checkin:     checkinEl.value,
+            checkout:    checkoutEl.value,
+            fullname:    document.getElementById('fullname').value,
+            phone:       document.getElementById('phone').value,
+            email:       document.getElementById('email').value,
+            guests:      document.getElementById('guests').value,
+            nights,
+            totalAmount
+          })
+        });
+        const result = await res.json();
+        if (result.success) window.location = '/payment/success?method=paypal';
+        else alert('Erreur lors de la confirmation. Contactez-nous.');
+      },
+      onError: (err) => {
+        console.error(err);
+        alert('Erreur PayPal. Essayez FedaPay ou appelez-nous.');
+      }
+    }).render('#paypal-button-container');
+  }
+
+  function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => alert('Lien copié !'));
+  }
+</script>
+</body>
+</html>
