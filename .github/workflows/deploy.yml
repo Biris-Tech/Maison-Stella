@@ -1,0 +1,28 @@
+name: Deploy Maison Stella to cPanel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Deploy via SSH to cPanel
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.CPANEL_HOST }}
+          username: ${{ secrets.CPANEL_USER }}
+          key: ${{ secrets.CPANEL_SSH_KEY }}
+          port: 22
+          script: |
+            cd ${{ secrets.CPANEL_APP_PATH }}
+            git pull origin main
+            npm install
+            npm run build || true
+            pm2 restart ${{ secrets.CPANEL_APP_NAME }} || pm2 start server.js --name ${{ secrets.CPANEL_APP_NAME }}

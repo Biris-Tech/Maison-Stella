@@ -452,8 +452,12 @@ app.post('/admin/parametres', requireAdmin, async (req, res) => {
 });
 
 // ─── START ────────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`\n✅ Maison Stella → http://localhost:${PORT}`);
-  console.log(`🔐 Admin panel  → http://localhost:${PORT}/admin`);
-  console.log(`   Mot de passe: stella2026\n`);
+// app.listen(PORT, () => {
+//   console.log(`\n✅ Maison Stella → http://localhost:${PORT}`);
+//   console.log(`🔐 Admin panel  → http://localhost:${PORT}/admin`);
+//   console.log(`   Mot de passe: stella2026\n`);
+// });
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on ${BASE_URL}`);
 });
