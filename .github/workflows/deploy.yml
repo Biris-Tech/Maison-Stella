@@ -26,3 +26,4 @@ jobs:
             npm install
             npm run build || true
             pm2 restart ${{ secrets.CPANEL_APP_NAME }} || pm2 start server.js --name ${{ secrets.CPANEL_APP_NAME }}
+            
