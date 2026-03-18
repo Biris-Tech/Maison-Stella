@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Room {
+  id          String   @id @map("_id")
+  name        String
+  price       Int
+  capacity    Int
+  bedType     String
+  desc        String
+  badge       String   @default("")
+  composition String[]
+  amenities   String[]
+  images      String[]
+  featured    Boolean  @default(false)
+  active      Boolean  @default(true)
+}
+
+model Booking {
+  id            String   @id @map("_id")
+  room          String
+  roomId        String?
+  checkin       String
+  checkout      String
+  fullname      String?
+  phone         String?
+  email         String?
+  guests        Int?
+  nights        Int?
+  totalAmount   Int?
+  status        String   @default("pending") // pending, confirmed, cancelled
+  paymentMethod String? // paypal, fedapay
+  paymentStatus String   @default("unpaid") // unpaid, paid, failed
+  paymentId     String?
+  createdAt     DateTime @default(now())
+}
+
+model Setting {
+  id          String @id @map("_id")
+  siteName    String
+  tagline     String
+  description String
+  address     String
+  phone       String
+  email       String
+  heroImage   String
+  aboutText   String
+  aboutText2  String
+  adminPlain  String @default("stella2026")
+  services    Json
+}
