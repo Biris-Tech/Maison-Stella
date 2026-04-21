@@ -56,6 +56,7 @@ img { display: block; max-width: 100%; }
 .sidebar-visit, .sidebar-logout { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.9rem; border-radius: 8px; font-size: 0.82rem; color: rgba(255,255,255,0.5); text-decoration: none; transition: all 0.2s; }
 .sidebar-visit:hover { color: #fff; background: rgba(255,255,255,0.07); }
 .sidebar-logout:hover { color: #fff; background: rgba(255,56,92,0.15); }
+.sidebar-badge { display: inline-flex; align-items: center; justify-content: center; background: #ef4444; color: #fff; font-size: 0.65rem; font-weight: 700; min-width: 18px; height: 18px; border-radius: 100px; padding: 0 4px; margin-left: auto; }
 
 /* MAIN */
 .admin-main { flex: 1; margin-left: var(--sidebar-w); min-height: 100vh; display: flex; flex-direction: column; }

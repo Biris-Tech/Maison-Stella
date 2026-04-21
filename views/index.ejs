@@ -262,14 +262,17 @@
       </div>
       <div class="contact-form-wrap">
         <h3>Envoyer un message</h3>
+        <div id="contactSuccess" style="display:none; background:#ecfdf5; border:1px solid #6ee7b7; border-radius:10px; padding:1rem 1.25rem; color:#065f46; font-size:0.92rem; margin-bottom:1rem;">
+          <strong>Message envoyé !</strong> Nous vous répondrons très bientôt.
+        </div>
         <form class="contact-form" id="contactForm">
           <div class="form-row">
-            <div class="field"><label>Prénom</label><input type="text" placeholder="Votre prénom" required></div>
-            <div class="field"><label>Nom</label><input type="text" placeholder="Votre nom" required></div>
+            <div class="field"><label>Prénom</label><input type="text" name="firstname" placeholder="Votre prénom" required></div>
+            <div class="field"><label>Nom</label><input type="text" name="lastname" placeholder="Votre nom" required></div>
           </div>
-          <div class="field"><label>Téléphone</label><input type="tel" placeholder="+228 XX XX XX XX"></div>
-          <div class="field"><label>Message</label><textarea rows="4" placeholder="Votre message…" required></textarea></div>
-          <button class="btn-primary btn-full" type="submit">Envoyer le message</button>
+          <div class="field"><label>Téléphone</label><input type="tel" name="phone" placeholder="+228 XX XX XX XX"></div>
+          <div class="field"><label>Message</label><textarea name="message" rows="4" placeholder="Votre message…" required></textarea></div>
+          <button class="btn-primary btn-full" type="submit" id="contactBtn">Envoyer le message</button>
         </form>
       </div>
     </div>
@@ -285,10 +288,26 @@
   document.getElementById('heroCheckin').addEventListener('change', function() {
     document.getElementById('heroCheckout').min = this.value;
   });
-  document.getElementById('contactForm').addEventListener('submit', function(e) {
+  document.getElementById('contactForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    alert('Message envoyé ✅\nNous vous répondrons très bientôt.');
-    this.reset();
+    const btn = document.getElementById('contactBtn');
+    btn.disabled = true;
+    btn.textContent = 'Envoi…';
+    try {
+      const fd = new FormData(this);
+      const resp = await fetch('/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(fd)),
+      });
+      if (!resp.ok) throw new Error();
+      this.style.display = 'none';
+      document.getElementById('contactSuccess').style.display = 'block';
+    } catch {
+      btn.disabled = false;
+      btn.textContent = 'Envoyer le message';
+      alert('Une erreur est survenue, veuillez réessayer.');
+    }
   });
   window.addEventListener('load', () => { const p = document.getElementById('preloader'); if (p) p.classList.add('fade-out'); });
 </script>

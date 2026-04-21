@@ -41,6 +41,16 @@ model Booking {
   createdAt     DateTime @default(now())
 }
 
+model ContactMessage {
+  id        String   @id
+  firstname String
+  lastname  String
+  phone     String?
+  message   String   @db.Text
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
 model Setting {
   id          String @id
   siteName    String

@@ -197,6 +197,14 @@ function requireAdmin(req, res, next) {
   res.redirect("/admin/login");
 }
 
+async function injectUnreadCount(_req, res, next) {
+  try {
+    res.locals.unreadCount = await prisma.contactMessage.count({ where: { read: false } });
+  } catch { res.locals.unreadCount = 0; }
+  next();
+}
+app.use("/admin", injectUnreadCount);
+
 // PayPal helpers
 const PAYPAL_BASE =
   process.env.PAYPAL_ENV === "live"
@@ -493,6 +501,48 @@ app.get("/payment/cancel", async (req, res) => {
     method: req.query.method || "",
     page: "",
   });
+});
+
+// ─── CONTACT FORM ────────────────────────────────────────────────────────────
+app.post("/contact", async (req, res) => {
+  const { firstname, lastname, phone, message } = req.body;
+  if (!firstname || !lastname || !message) {
+    return res.status(400).json({ error: "Champs requis manquants." });
+  }
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  await prisma.contactMessage.create({ data: { id, firstname, lastname, phone: phone || null, message } });
+
+  const transporter = createMailTransporter();
+  if (transporter) {
+    transporter.sendMail({
+      from: `"Maison Stella" <${process.env.SMTP_USER}>`,
+      to: BOOKING_EMAIL,
+      subject: `Nouveau message de ${firstname} ${lastname}`,
+      html: `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><style>
+body{font-family:-apple-system,sans-serif;background:#f4f4f4;margin:0;padding:0}
+.wrap{max-width:520px;margin:2rem auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.1)}
+.hdr{background:#d2553d;padding:1.75rem;text-align:center;color:#fff}
+.hdr h1{margin:0;font-size:1.3rem;font-weight:700}
+.body{padding:1.75rem}
+.row{padding:.55rem 0;border-bottom:1px solid #eee;font-size:.9rem;display:flex;justify-content:space-between}
+.row:last-child{border-bottom:none}
+.label{color:#767676;font-weight:500}.value{color:#222;font-weight:600}
+.msg{background:#f9f9f9;border-radius:8px;padding:1rem;margin-top:1rem;font-size:.9rem;line-height:1.6;white-space:pre-wrap}
+.ftr{background:#f9f9f9;padding:1rem 1.75rem;font-size:.8rem;color:#999;text-align:center;border-top:1px solid #eee}
+</style></head><body>
+<div class="wrap">
+  <div class="hdr"><h1>Nouveau message de contact</h1></div>
+  <div class="body">
+    <div class="row"><span class="label">Nom</span><span class="value">${firstname} ${lastname}</span></div>
+    ${phone ? `<div class="row"><span class="label">Téléphone</span><span class="value">${phone}</span></div>` : ""}
+    <div class="msg">${message.replace(/</g, "&lt;")}</div>
+  </div>
+  <div class="ftr">Maison Stella · Avepozo, Lomé</div>
+</div></body></html>`,
+    }).catch(() => {});
+  }
+
+  res.json({ ok: true });
 });
 
 // ─── ADMIN AUTH ───────────────────────────────────────────────────────────────
@@ -883,6 +933,23 @@ app.post("/admin/parametres", requireAdmin, async (req, res) => {
   await prisma.setting.update({ where: { id: "main" }, data });
   cacheInvalidate("settings");
   res.redirect("/admin/parametres?success=1");
+});
+
+// ─── MESSAGES DE CONTACT ─────────────────────────────────────────────────────
+app.get("/admin/messages", requireAdmin, async (req, res) => {
+  const settings = await prisma.setting.findUnique({ where: { id: "main" } });
+  const messages = await prisma.contactMessage.findMany({ orderBy: { createdAt: "desc" } });
+  res.render("admin/messages", { settings, messages });
+});
+
+app.post("/admin/messages/:id/read", requireAdmin, async (req, res) => {
+  await prisma.contactMessage.update({ where: { id: req.params.id }, data: { read: true } });
+  res.redirect("/admin/messages");
+});
+
+app.post("/admin/messages/:id/delete", requireAdmin, async (req, res) => {
+  await prisma.contactMessage.delete({ where: { id: req.params.id } });
+  res.redirect("/admin/messages");
 });
 
 // ─── MÉDIATHÈQUE ─────────────────────────────────────────────────────────────

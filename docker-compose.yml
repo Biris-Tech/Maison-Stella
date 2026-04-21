@@ -36,7 +36,12 @@ services:
       PAYPAL_ENV: ${PAYPAL_ENV}
       FEDAPAY_SECRET_KEY: ${FEDAPAY_SECRET_KEY}
       FEDAPAY_ENV: ${FEDAPAY_ENV}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+    volumes:
+      - images_data:/app/public/image
     command: ["npm", "run", "start:prod"]
 
 volumes:
   db_data:
+  images_data:

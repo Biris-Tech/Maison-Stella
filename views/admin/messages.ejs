@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Messages de contact</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="icon" href="/image/logo.png" type="image/png">
+</head>
+<body class="admin-body">
+
+<%- include('sidebar', { activePage: 'messages', settings }) %>
+
+<main class="admin-main">
+  <div class="admin-topbar">
+    <h1 class="admin-page-title">Messages de contact</h1>
+    <span class="topbar-count"><%= messages.length %> message<%= messages.length !== 1 ? 's' : '' %></span>
+  </div>
+  <div class="admin-content">
+
+    <% if (messages.length === 0) { %>
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <p>Aucun message reçu pour l'instant.</p>
+    </div>
+    <% } else { %>
+    <div class="table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Expéditeur</th>
+            <th>Téléphone</th>
+            <th>Message</th>
+            <th>Date</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% messages.forEach(msg => { %>
+          <tr class="<%= msg.read ? '' : 'row-unread' %>">
+            <td><strong><%= msg.firstname %> <%= msg.lastname %></strong></td>
+            <td>
+              <% if (msg.phone) { %>
+              <a href="tel:<%= msg.phone.replace(/\s/g,'') %>"><%= msg.phone %></a>
+              <% } else { %>—<% } %>
+            </td>
+            <td class="message-cell">
+              <span class="message-preview" onclick="toggleMessage(this)"><%= msg.message.substring(0,80) %><%= msg.message.length > 80 ? '…' : '' %></span>
+              <span class="message-full" style="display:none"><%= msg.message %></span>
+            </td>
+            <td><%= new Date(msg.createdAt).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) %></td>
+            <td>
+              <% if (!msg.read) { %>
+              <span class="status-badge" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">Non lu</span>
+              <% } else { %>
+              <span class="status-badge" style="background:#f1f5f9;color:#64748b;">Lu</span>
+              <% } %>
+            </td>
+            <td class="actions-cell">
+              <% if (!msg.read) { %>
+              <form method="POST" action="/admin/messages/<%= msg.id %>/read" style="display:inline">
+                <button type="submit" class="btn-xs btn-green" title="Marquer comme lu">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
+              </form>
+              <% } %>
+              <form method="POST" action="/admin/messages/<%= msg.id %>/delete" style="display:inline"
+                onsubmit="return confirm('Supprimer ce message ?')">
+                <button type="submit" class="btn-xs btn-red" title="Supprimer">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                </button>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+
+  </div>
+</main>
+
+<style>
+  .row-unread td { background: #fafbff; }
+  .row-unread td:first-child { border-left: 3px solid #3b82f6; }
+  .message-cell { max-width: 320px; }
+  .message-preview { cursor: pointer; color: var(--dark); }
+  .message-preview:hover { text-decoration: underline; }
+  .message-full { white-space: pre-wrap; font-size: 0.88rem; color: var(--dark); display: block; }
+</style>
+
+<script src="/js/admin.js"></script>
+<script>
+  function toggleMessage(el) {
+    const full = el.nextElementSibling;
+    const isHidden = full.style.display === 'none';
+    full.style.display = isHidden ? 'block' : 'none';
+    el.style.display = isHidden ? 'none' : 'inline';
+  }
+</script>
+</body>
+</html>

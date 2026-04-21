@@ -73,6 +73,7 @@ jobs:
             --exclude='.git' \
             --exclude='node_modules' \
             --exclude='data' \
+            --exclude='public/image' \
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
             . "$SERVER_USER@$SERVER_HOST:/opt/maison-stella/"
 
