@@ -6,6 +6,7 @@
   <title>Réservation confirmée – <%= settings.siteName %></title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
+  <link rel="icon" href="/image/logo.png" type="image/png">
   <style>
     .payment-result-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-gray); padding: 2rem; }
     .payment-result-card { background: #fff; border-radius: 20px; padding: 3rem 2.5rem; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 8px 40px rgba(0,0,0,0.08); }
@@ -21,11 +22,11 @@
 
 <div class="payment-result-page">
   <div class="payment-result-card">
-    <div class="result-icon">🎉</div>
+    <div class="result-icon"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
     <% if (method === 'paypal') { %>
-    <div class="method-badge">💳 Payé via PayPal</div>
+    <div class="method-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:0.3rem"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Payé via PayPal</div>
     <% } else if (method === 'fedapay') { %>
-    <div class="method-badge">📱 Payé via FedaPay</div>
+    <div class="method-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:0.3rem"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg> Payé via FedaPay</div>
     <% } %>
     <h1 class="result-card-title">Réservation confirmée !</h1>
     <p class="result-card-text">

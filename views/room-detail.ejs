@@ -59,11 +59,19 @@
   <link rel="preload" as="image" href="/image/<%= encodeURIComponent(room.images[0]) %>">
   <% } %>
   <link rel="stylesheet" href="/css/main.css">
+  <link rel="icon" href="/image/logo.png" type="image/png">
   <% if (paypalClientId) { %>
   <script src="https://www.paypal.com/sdk/js?client-id=<%= paypalClientId %>&currency=EUR" defer></script>
   <% } %>
 </head>
 <body>
+
+<div id="preloader">
+  <div class="preloader-inner">
+    <img src="/image/logo.png" alt="<%= settings.siteName %>" class="preloader-logo" width="72" height="72">
+    <div class="preloader-bar"><div class="preloader-bar-inner"></div></div>
+  </div>
+</div>
 
 <%- include('partials/nav', { page, settings }) %>
 
@@ -74,7 +82,7 @@
         <p class="breadcrumb"><a href="/">Accueil</a> / <a href="/chambres">Chambres</a> / <%= room.name %></p>
         <h1><%= room.name %></h1>
         <div class="detail-meta-row">
-          <span class="detail-rating">⭐ 4.9 · <a href="#">12 avis</a></span>
+          <span class="detail-rating"><svg width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 4.9 · <a href="#">12 avis</a></span>
           <span>·</span>
           <span><%= settings.address %></span>
           <% if (room.badge) { %><span class="detail-badge"><%= room.badge %></span><% } %>
@@ -141,7 +149,7 @@
         <hr class="divider">
 
         <div class="detail-section">
-          <h3>⭐ 4.9 · <span style="font-weight:400; color: var(--muted)">12 avis</span></h3>
+          <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1" style="vertical-align:middle;margin-right:0.2rem"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 4.9 · <span style="font-weight:400; color: var(--muted)">12 avis</span></h3>
           <div class="reviews-grid">
             <div class="review-card">
               <div class="review-author">
@@ -168,7 +176,7 @@
             <span class="booking-price"><%= room.price.toLocaleString('fr-FR') %> <small>FCFA</small></span>
             <span class="booking-per">/ nuit</span>
           </div>
-          <div class="booking-rating">⭐ 4.9 · 12 avis</div>
+          <div class="booking-rating"><svg width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 4.9 · 12 avis</div>
 
           <!-- ÉTAPE 1 : Formulaire -->
           <div id="stepForm">
@@ -295,7 +303,7 @@
         <div class="contact-card">
           <p>Préférez appeler ?</p>
           <a href="tel:<%= settings.phone.replace(/\s/g,'') %>" class="btn-outline btn-full">
-            📞 <%= settings.phone %>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:0.3rem"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.83a16 16 0 0 0 6.29 6.29l1.69-1.84a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 15.7v1.22z"/></svg> <%= settings.phone %>
           </a>
         </div>
       </div>
@@ -461,6 +469,7 @@
   function copyLink() {
     navigator.clipboard.writeText(window.location.href).then(() => alert('Lien copié !'));
   }
+  window.addEventListener('load', () => { const p = document.getElementById('preloader'); if (p) p.classList.add('fade-out'); });
 </script>
 </body>
 </html>

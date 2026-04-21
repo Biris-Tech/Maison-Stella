@@ -6,6 +6,7 @@
   <title>Admin – Chambres</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/admin.css">
+  <link rel="icon" href="/image/logo.png" type="image/png">
 </head>
 <body class="admin-body">
 
@@ -32,7 +33,7 @@
             <span class="status-pill <%= room.active ? 'status-active' : 'status-inactive' %>">
               <%= room.active ? 'Actif' : 'Inactif' %>
             </span>
-            <% if (room.featured) { %><span class="status-pill status-featured">⭐ Vedette</span><% } %>
+            <% if (room.featured) { %><span class="status-pill status-featured"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Vedette</span><% } %>
           </div>
         </div>
 
@@ -44,7 +45,7 @@
           <p class="room-admin-meta"><%= room.bedType %> · <%= room.capacity %> pers. · <%= room.images.length %> photo<%= room.images.length > 1 ? 's' : '' %></p>
 
           <div class="room-admin-actions">
-            <a href="/admin/chambres/edit/<%= room.id %>" class="btn-admin-outline btn-sm">✏️ Modifier</a>
+            <a href="/admin/chambres/edit/<%= room.id %>" class="btn-admin-outline btn-sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Modifier</a>
             <form method="POST" action="/admin/chambres/toggle/<%= room.id %>" style="display:inline">
               <button type="submit" class="btn-admin-ghost btn-sm">
                 <%= room.active ? 'Désactiver' : 'Activer' %>
@@ -53,7 +54,7 @@
             <a href="/chambre/<%= room.id %>" target="_blank" class="btn-admin-ghost btn-sm">Voir →</a>
             <form method="POST" action="/admin/chambres/delete/<%= room.id %>" style="display:inline"
               onsubmit="return confirm('Supprimer « <%= room.name %> » ? Cette action est irréversible.')">
-              <button type="submit" class="btn-xs btn-red">🗑</button>
+              <button type="submit" class="btn-xs btn-red"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
             </form>
           </div>
         </div>
@@ -64,7 +65,7 @@
 
     <% if (rooms.length === 0) { %>
     <div class="empty-state">
-      <div class="empty-icon">🏠</div>
+      <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
       <p>Aucune chambre créée pour l'instant.</p>
       <a href="/admin/chambres/nouvelle" class="btn-admin-primary">Créer la première chambre</a>
     </div>

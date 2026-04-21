@@ -6,6 +6,7 @@
   <title>Admin – Réservations</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/admin.css">
+  <link rel="icon" href="/image/logo.png" type="image/png">
 </head>
 <body class="admin-body">
 
@@ -20,7 +21,7 @@
 
     <% if (bookings.length === 0) { %>
     <div class="empty-state">
-      <div class="empty-icon">📭</div>
+      <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-6l-2 3H10l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
       <p>Aucune réservation reçue pour l'instant.</p>
     </div>
     <% } else { %>
@@ -70,7 +71,7 @@
               </form>
               <% } %>
               <form method="POST" action="/admin/reservations/delete/<%= b.id %>" style="display:inline" onsubmit="return confirm('Supprimer cette réservation ?')">
-                <button type="submit" class="btn-xs btn-red" title="Supprimer">🗑</button>
+                <button type="submit" class="btn-xs btn-red" title="Supprimer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
               </form>
             </td>
           </tr>

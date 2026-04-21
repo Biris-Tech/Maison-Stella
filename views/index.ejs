@@ -50,8 +50,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="preload" as="image" href="/image/<%= encodeURIComponent(settings.heroImage) %>">
   <link rel="stylesheet" href="/css/main.css">
+  <link rel="icon" href="/image/logo.png" type="image/png">
 </head>
 <body>
+
+<div id="preloader">
+  <div class="preloader-inner">
+    <img src="/image/logo.png" alt="<%= settings.siteName %>" class="preloader-logo" width="72" height="72">
+    <div class="preloader-bar"><div class="preloader-bar-inner"></div></div>
+  </div>
+</div>
 
 <%- include('partials/nav', { page, settings }) %>
 
@@ -148,7 +156,7 @@
         <div class="room-card-body">
           <div class="room-card-top">
             <h3 class="room-card-name"><%= room.name %></h3>
-            <div class="room-card-rating">⭐ 4.9</div>
+            <div class="room-card-rating"><svg width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 4.9</div>
           </div>
           <p class="room-card-meta"><%= room.bedType %> · <%= room.capacity %> pers.</p>
           <p class="room-card-desc"><%= room.desc.substring(0, 90) %>…</p>
@@ -239,15 +247,15 @@
         <p class="body-text">Pour toute demande de réservation ou renseignement, notre équipe est disponible 7j/7.</p>
         <div class="contact-list">
           <div class="contact-item">
-            <div class="contact-icon">📍</div>
+            <div class="contact-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
             <div><strong>Adresse</strong><br><%= settings.address %></div>
           </div>
           <div class="contact-item">
-            <div class="contact-icon">📞</div>
+            <div class="contact-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.83a16 16 0 0 0 6.29 6.29l1.69-1.84a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 15.7v1.22z"/></svg></div>
             <div><strong>Téléphone / WhatsApp</strong><br><a href="tel:<%= settings.phone.replace(/\s/g,'') %>"><%= settings.phone %></a></div>
           </div>
           <div class="contact-item">
-            <div class="contact-icon">🕐</div>
+            <div class="contact-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
             <div><strong>Horaires</strong><br>Ouvert 24h/24 · 7j/7</div>
           </div>
         </div>
@@ -282,6 +290,7 @@
     alert('Message envoyé ✅\nNous vous répondrons très bientôt.');
     this.reset();
   });
+  window.addEventListener('load', () => { const p = document.getElementById('preloader'); if (p) p.classList.add('fade-out'); });
 </script>
 </body>
 </html>

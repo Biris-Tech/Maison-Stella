@@ -22,6 +22,16 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); over
 img { display: block; max-width: 100%; }
 a { color: inherit; }
 
+/* ── PRELOADER ── */
+#preloader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.45s ease, visibility 0.45s ease; }
+#preloader.fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
+.preloader-inner { display: flex; flex-direction: column; align-items: center; gap: 1.25rem; }
+.preloader-logo { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; animation: preloader-pulse 1.4s ease-in-out infinite; }
+.preloader-bar { width: 48px; height: 3px; background: var(--border); border-radius: 100px; overflow: hidden; }
+.preloader-bar-inner { height: 100%; width: 0%; background: var(--primary); border-radius: 100px; animation: preloader-fill 1.8s ease-in-out infinite; }
+@keyframes preloader-pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(.9);opacity:.7} }
+@keyframes preloader-fill { 0%{width:0%;opacity:1} 70%{width:100%;opacity:1} 100%{width:100%;opacity:0} }
+
 /* ── NAV ── */
 .navbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;

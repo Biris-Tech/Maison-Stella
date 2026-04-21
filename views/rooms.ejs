@@ -20,8 +20,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
+  <link rel="icon" href="/image/logo.png" type="image/png">
 </head>
 <body>
+
+<div id="preloader">
+  <div class="preloader-inner">
+    <img src="/image/logo.png" alt="<%= settings.siteName %>" class="preloader-logo" width="72" height="72">
+    <div class="preloader-bar"><div class="preloader-bar-inner"></div></div>
+  </div>
+</div>
 
 <%- include('partials/nav', { page, settings }) %>
 
@@ -59,7 +67,7 @@
       <div class="room-card-body">
         <div class="room-card-top">
           <h3 class="room-card-name"><%= room.name %></h3>
-          <div class="room-card-rating">⭐ 4.9</div>
+          <div class="room-card-rating"><svg width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 4.9</div>
         </div>
         <p class="room-card-meta"><%= room.bedType %> · <%= room.capacity %> pers. max</p>
         <p class="room-card-desc"><%= room.desc.substring(0, 100) %>…</p>
@@ -92,6 +100,7 @@
       });
     });
   });
+  window.addEventListener('load', () => { const p = document.getElementById('preloader'); if (p) p.classList.add('fade-out'); });
 </script>
 </body>
 </html>

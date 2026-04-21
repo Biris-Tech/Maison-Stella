@@ -18,6 +18,7 @@
     "express-session": "^1.17.3",
     "fedapay": "^1.2.5",
     "multer": "^1.4.5-lts.1",
+    "nodemailer": "^8.0.5",
     "prisma": "^5.22.0",
     "sharp": "^0.34.5"
   },

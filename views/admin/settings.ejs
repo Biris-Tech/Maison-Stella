@@ -6,6 +6,7 @@
   <title>Admin – Paramètres</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/admin.css">
+  <link rel="icon" href="/image/logo.png" type="image/png">
 </head>
 <body class="admin-body">
 
@@ -18,7 +19,7 @@
   <div class="admin-content">
 
     <% if (success) { %>
-    <div class="alert alert-success">✅ Paramètres enregistrés avec succès.</div>
+    <div class="alert alert-success"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:0.4rem"><polyline points="20 6 9 17 4 12"/></svg> Paramètres enregistrés avec succès.</div>
     <% } %>
 
     <form method="POST" action="/admin/parametres" class="settings-form">

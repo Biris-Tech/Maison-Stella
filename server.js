@@ -6,7 +6,75 @@ const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
 const compression = require("compression");
+const nodemailer = require("nodemailer");
 const prisma = require("./lib/prisma");
+
+// ─── EMAIL ────────────────────────────────────────────────────────────────────
+const BOOKING_EMAIL = "maisonstella24@gmail.com";
+
+function createMailTransporter() {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return null;
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+  });
+}
+
+async function sendBookingNotification(booking) {
+  const transporter = createMailTransporter();
+  if (!transporter) return;
+  const methodLabel = booking.paymentMethod === "paypal" ? "PayPal" : "FedaPay (Mobile Money)";
+  const html = `
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><style>
+  body{font-family:-apple-system,sans-serif;background:#f4f4f4;margin:0;padding:0}
+  .wrap{max-width:560px;margin:2rem auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.1)}
+  .hdr{background:#d2553d;padding:2rem;text-align:center;color:#fff}
+  .hdr h1{margin:0;font-size:1.4rem;font-weight:700}
+  .hdr p{margin:.4rem 0 0;font-size:.9rem;opacity:.85}
+  .body{padding:1.75rem}
+  .row{display:flex;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid #eee;font-size:.9rem}
+  .row:last-child{border-bottom:none}
+  .label{color:#767676;font-weight:500}
+  .value{color:#222;font-weight:600;text-align:right;max-width:60%}
+  .total{background:#fff5f3;border-radius:8px;padding:1rem;margin-top:1.25rem;display:flex;justify-content:space-between;align-items:center}
+  .total .label{font-size:1rem;font-weight:600;color:#222}
+  .total .price{font-size:1.3rem;font-weight:700;color:#d2553d}
+  .ftr{background:#f9f9f9;padding:1.25rem 1.75rem;font-size:.8rem;color:#999;text-align:center;border-top:1px solid #eee}
+</style></head><body>
+<div class="wrap">
+  <div class="hdr">
+    <h1>Nouvelle réservation</h1>
+    <p>Maison Stella · Avepozo, Lomé</p>
+  </div>
+  <div class="body">
+    <div class="row"><span class="label">Chambre</span><span class="value">${booking.room}</span></div>
+    <div class="row"><span class="label">Arrivée</span><span class="value">${booking.checkin}</span></div>
+    <div class="row"><span class="label">Départ</span><span class="value">${booking.checkout}</span></div>
+    <div class="row"><span class="label">Nuits</span><span class="value">${booking.nights}</span></div>
+    <div class="row"><span class="label">Voyageurs</span><span class="value">${booking.guests}</span></div>
+    <div class="row"><span class="label">Client</span><span class="value">${booking.fullname || "—"}</span></div>
+    <div class="row"><span class="label">Téléphone</span><span class="value">${booking.phone || "—"}</span></div>
+    <div class="row"><span class="label">E-mail</span><span class="value">${booking.email || "—"}</span></div>
+    <div class="row"><span class="label">Paiement</span><span class="value">${methodLabel}</span></div>
+    <div class="total">
+      <span class="label">Total encaissé</span>
+      <span class="price">${(booking.totalAmount || 0).toLocaleString("fr-FR")} FCFA</span>
+    </div>
+  </div>
+  <div class="ftr">Réservation enregistrée automatiquement — Maison Stella Admin</div>
+</div>
+</body></html>`;
+  try {
+    await transporter.sendMail({
+      from: `"Maison Stella" <${process.env.SMTP_USER}>`,
+      to: BOOKING_EMAIL,
+      subject: `Nouvelle réservation – ${booking.room} (${booking.checkin} → ${booking.checkout})`,
+      html,
+    });
+  } catch (e) {
+    console.error("Email send error:", e.message);
+  }
+}
 
 // ─── IN-MEMORY CACHE ─────────────────────────────────────────────────────────
 const _cache = new Map();
@@ -310,6 +378,7 @@ app.get("/payment/fedapay/callback", async (req, res) => {
       });
       req.session.pendingBooking = null;
       req.session.fedapayTxId = null;
+      sendBookingNotification({ ...booking, paymentMethod: "fedapay" }).catch(() => {});
       return res.redirect("/payment/success?method=fedapay");
     }
     res.redirect("/payment/cancel?method=fedapay");
@@ -397,6 +466,7 @@ app.post("/payment/paypal/capture", async (req, res) => {
           paymentId: orderID,
         },
       });
+      sendBookingNotification({ room, checkin, checkout, fullname, phone, email, guests: parseInt(guests) || 1, nights: parseInt(nights) || 1, totalAmount: parseInt(totalAmount), paymentMethod: "paypal" }).catch(() => {});
       res.json({ success: true });
     } else {
       res.json({ success: false, error: "Paiement non complété" });

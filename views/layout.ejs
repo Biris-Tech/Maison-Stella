@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
+  <link rel="icon" href="/image/logo.png" type="image/png">
   <%- typeof extraHead !== 'undefined' ? extraHead : '' %>
 </head>
 <body>
@@ -15,7 +16,7 @@
 <nav class="navbar" id="navbar">
   <div class="nav-inner">
     <a href="/" class="nav-logo">
-      <span class="logo-icon">⭐</span>
+      <span class="logo-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
       <%= settings.siteName %>
     </a>
     <ul class="nav-links" id="navLinks">
@@ -38,7 +39,7 @@
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-brand">
-      <a href="/" class="footer-logo"><span class="logo-icon">⭐</span> <%= settings.siteName %></a>
+      <a href="/" class="footer-logo"><span class="logo-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span> <%= settings.siteName %></a>
       <p class="footer-desc"><%= settings.tagline %></p>
     </div>
     <div class="footer-links-group">
