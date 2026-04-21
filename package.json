@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "start:prod": "prisma generate && prisma db push && node server.js",
+    "start:prod": "prisma generate && prisma db push && node prisma/seed.js && node server.js",
     "dev": "nodemon server.js"
   },
   "dependencies": {
