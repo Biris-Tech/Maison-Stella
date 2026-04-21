@@ -76,7 +76,10 @@
       </div>
 
       <div class="settings-card">
-        <h2 class="settings-section-title">Photos de la chambre</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+          <h2 class="settings-section-title" style="margin-bottom:0;">Photos de la chambre</h2>
+          <button type="button" class="btn-admin-ghost btn-sm" onclick="openLibraryModal()">🖼 Médiathèque</button>
+        </div>
         <div class="upload-zone" id="uploadZone">
           <div class="upload-zone-inner">
             <div class="upload-icon">🖼️</div>
@@ -100,11 +103,32 @@
   </div>
 </main>
 
+<!-- Modal médiathèque -->
+<div class="modal-backdrop" id="libraryModal" style="display:none;" onclick="closeLibraryModal(event)">
+  <div class="modal-box" style="max-width:700px;" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Choisir depuis la médiathèque</h3>
+      <button class="modal-close" onclick="closeLibraryModal()">✕</button>
+    </div>
+    <input type="text" placeholder="Rechercher…" class="media-search-input" style="width:100%;margin-bottom:1rem;" oninput="filterLibrary(this.value)">
+    <div class="library-modal-grid" id="libraryGrid">Chargement…</div>
+    <div class="modal-actions">
+      <span id="libSelCount" style="font-size:0.82rem;color:var(--muted);margin-right:auto;">0 sélectionnée(s)</span>
+      <button class="btn-admin-outline" onclick="closeLibraryModal()">Annuler</button>
+      <button class="btn-admin-primary" onclick="confirmLibrarySelection()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
 <script src="/js/admin.js"></script>
 <script>
-  const input   = document.getElementById('imagesInput');
-  const preview = document.getElementById('uploadPreview');
-  const zone    = document.getElementById('uploadZone');
+  const input     = document.getElementById('imagesInput');
+  const preview   = document.getElementById('uploadPreview');
+  const zone      = document.getElementById('uploadZone');
+  const form      = document.querySelector('form');
+  const submitBtn = form.querySelector('button[type="submit"]');
+
+  let previewItems = []; // [{file, div}]
 
   input.addEventListener('change', showPreviews);
 
@@ -120,15 +144,140 @@
 
   function showPreviews() {
     preview.innerHTML = '';
+    previewItems = [];
     [...input.files].forEach(file => {
+      const div = document.createElement('div');
+      div.className = 'preview-thumb';
+      div.innerHTML = `<div style="width:100%;aspect-ratio:1;background:var(--bg);border-radius:8px;border:1px solid var(--border);"></div>
+        <div class="preview-progress-wrap"><div class="preview-progress-bar"></div></div>
+        <span class="preview-check">✓</span>
+        <span>${file.name}</span>`;
+      preview.appendChild(div);
+      previewItems.push({ file, div });
       const reader = new FileReader();
-      reader.onload = e => {
-        const div = document.createElement('div');
-        div.className = 'preview-thumb';
-        div.innerHTML = `<img src="${e.target.result}" alt="${file.name}"><span>${file.name}</span>`;
-        preview.appendChild(div);
+      reader.onload = ev => {
+        const placeholder = div.querySelector('div:first-child');
+        if (placeholder) {
+          const img = document.createElement('img');
+          img.src = ev.target.result;
+          img.alt = '';
+          div.replaceChild(img, placeholder);
+        }
       };
       reader.readAsDataURL(file);
+    });
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Création en cours…';
+
+    const fd = new FormData(form);
+    fd.delete('images');
+
+    let roomId;
+    try {
+      const resp = await fetch('/admin/chambres/nouvelle/json', { method: 'POST', body: fd });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Erreur serveur');
+      roomId = data.id;
+    } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Créer la chambre';
+      alert('Erreur : ' + err.message);
+      return;
+    }
+
+    const items = [...previewItems];
+    for (let i = 0; i < items.length; i++) {
+      submitBtn.textContent = `Upload photos (${i + 1}/${items.length})…`;
+      await uploadImage(items[i].file, roomId, items[i].div);
+    }
+
+    // Ajouter les images sélectionnées depuis la médiathèque
+    if (libSelectedForCreate.size) {
+      await fetch(`/admin/chambres/${roomId}/images/from-library`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filenames: [...libSelectedForCreate] }),
+      });
+    }
+
+    window.location.href = `/admin/chambres/edit/${roomId}?success=Chambre+créée+avec+succès`;
+  });
+
+  function uploadImage(file, roomId, thumb) {
+    return new Promise(resolve => {
+      const xhr = new XMLHttpRequest();
+      const fd = new FormData();
+      fd.append('image', file);
+      const bar = thumb.querySelector('.preview-progress-bar');
+      xhr.upload.addEventListener('progress', ev => {
+        if (ev.lengthComputable)
+          bar.style.width = Math.round(ev.loaded / ev.total * 100) + '%';
+      });
+      xhr.addEventListener('load', () => {
+        thumb.classList.add(xhr.status < 300 ? 'upload-done' : 'upload-error');
+        resolve();
+      });
+      xhr.addEventListener('error', () => { thumb.classList.add('upload-error'); resolve(); });
+      xhr.open('POST', `/admin/chambres/${roomId}/images/single`);
+      xhr.send(fd);
+    });
+  }
+
+  /* ── Médiathèque (create) ── */
+  let libAllImages = [];
+  let libSelectedForCreate = new Set();
+
+  async function openLibraryModal() {
+    libSelectedForCreate.clear();
+    document.getElementById('libraryModal').style.display = 'flex';
+    if (!libAllImages.length) {
+      const resp = await fetch('/admin/media/list');
+      libAllImages = await resp.json();
+    }
+    renderLibrary(libAllImages);
+  }
+  function closeLibraryModal(e) {
+    if (!e || e.target === document.getElementById('libraryModal'))
+      document.getElementById('libraryModal').style.display = 'none';
+  }
+  function filterLibrary(q) {
+    const filtered = q ? libAllImages.filter(i => i.filename.toLowerCase().includes(q.toLowerCase())) : libAllImages;
+    renderLibrary(filtered);
+  }
+  function renderLibrary(items) {
+    const grid = document.getElementById('libraryGrid');
+    if (!items.length) { grid.innerHTML = '<p style="color:var(--muted);padding:1rem;">Aucune image.</p>'; return; }
+    grid.innerHTML = items.map(item => `
+      <div class="library-modal-item ${libSelectedForCreate.has(item.filename) ? 'selected' : ''}"
+        onclick="toggleLibItem('${item.filename}', this)">
+        <img src="${item.url}" alt="" loading="lazy" decoding="async">
+        <div class="lib-check">✓</div>
+      </div>
+    `).join('');
+    document.getElementById('libSelCount').textContent = `${libSelectedForCreate.size} sélectionnée(s)`;
+  }
+  function toggleLibItem(filename, el) {
+    if (libSelectedForCreate.has(filename)) { libSelectedForCreate.delete(filename); el.classList.remove('selected'); }
+    else { libSelectedForCreate.add(filename); el.classList.add('selected'); }
+    document.getElementById('libSelCount').textContent = `${libSelectedForCreate.size} sélectionnée(s)`;
+  }
+  function confirmLibrarySelection() {
+    closeLibraryModal();
+    // Afficher un badge dans l'aperçu pour chaque image de la médiathèque sélectionnée
+    const preview = document.getElementById('uploadPreview');
+    libSelectedForCreate.forEach(filename => {
+      if (document.querySelector(`[data-libfile="${filename}"]`)) return;
+      const div = document.createElement('div');
+      div.className = 'preview-thumb';
+      div.dataset.libfile = filename;
+      div.innerHTML = `<img src="/image/${encodeURIComponent(filename)}" alt="" loading="lazy">
+        <span>${filename.length > 22 ? filename.substring(0,20)+'…' : filename}</span>
+        <span style="position:absolute;top:4px;left:4px;background:#22c55e;color:#fff;font-size:0.6rem;font-weight:700;padding:2px 5px;border-radius:100px;">Biblio</span>`;
+      preview.appendChild(div);
     });
   }
 </script>

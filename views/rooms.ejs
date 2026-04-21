@@ -3,7 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nos Chambres – <%= settings.siteName %></title>
+  <title>Nos Chambres & Suites – <%= settings.siteName %></title>
+  <meta name="description" content="Découvrez toutes les chambres et suites de <%= settings.siteName %> à Avepozo, Lomé. Réservation en ligne, paiement sécurisé.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="<%= canonical %>">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:title" content="Nos Chambres & Suites – <%= settings.siteName %>">
+  <meta property="og:description" content="Découvrez toutes les chambres et suites de <%= settings.siteName %> à Avepozo, Lomé.">
+  <meta property="og:url" content="<%= canonical %>">
+  <meta property="og:image" content="<%= baseUrl %>/image/<%= encodeURIComponent(settings.heroImage) %>">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Nos Chambres – <%= settings.siteName %>">
+  <meta name="twitter:image" content="<%= baseUrl %>/image/<%= encodeURIComponent(settings.heroImage) %>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">

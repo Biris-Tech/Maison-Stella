@@ -4,7 +4,26 @@ const session = require("express-session");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const sharp = require("sharp");
+const compression = require("compression");
 const prisma = require("./lib/prisma");
+
+// ─── IN-MEMORY CACHE ─────────────────────────────────────────────────────────
+const _cache = new Map();
+const CACHE_TTL = 5 * 60 * 1000;
+function cacheGet(key) {
+  const item = _cache.get(key);
+  if (!item || Date.now() > item.exp) { _cache.delete(key); return null; }
+  return item.val;
+}
+function cacheSet(key, val, ttl = CACHE_TTL) {
+  _cache.set(key, { val, exp: Date.now() + ttl });
+}
+function cacheInvalidate(prefix) {
+  for (const k of _cache.keys()) {
+    if (k === prefix || k.startsWith(prefix + ":")) _cache.delete(k);
+  }
+}
 
 const { FedaPay, Transaction } = require("fedapay");
 
@@ -17,9 +36,31 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 // ─── MIDDLEWARE ───────────────────────────────────────────────────────────────
-app.use(express.static(path.join(__dirname, "public")));
+app.use(compression());
+
+// Images : cache long (noms horodatés = immutables)
+app.use("/image", express.static(path.join(__dirname, "public/image"), {
+  maxAge: "30d", etag: true, lastModified: true,
+}));
+// CSS/JS : cache 1 jour
+app.use("/css", express.static(path.join(__dirname, "public/css"), {
+  maxAge: "1d", etag: true,
+}));
+app.use("/js", express.static(path.join(__dirname, "public/js"), {
+  maxAge: "1d", etag: true,
+}));
+// Reste des assets statiques
+app.use(express.static(path.join(__dirname, "public"), { maxAge: "1h", etag: true }));
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// Inject SEO locals dans toutes les vues
+app.use((req, res, next) => {
+  res.locals.baseUrl = BASE_URL;
+  res.locals.canonical = BASE_URL + req.path;
+  next();
+});
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "stella-secret-2026",
@@ -49,6 +90,29 @@ const uploadImages = multer({
   },
   limits: { fileSize: 15 * 1024 * 1024 },
 });
+
+// ─── IMAGE COMPRESSION ────────────────────────────────────────────────────────
+async function compressImage(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  try {
+    let pipeline = sharp(filePath)
+      .rotate()
+      .resize(2000, 2000, { fit: "inside", withoutEnlargement: true });
+    if (ext === ".jpg" || ext === ".jpeg") {
+      pipeline = pipeline.jpeg({ quality: 85, mozjpeg: true });
+    } else if (ext === ".png") {
+      pipeline = pipeline.png({ compressionLevel: 9 });
+    } else if (ext === ".webp") {
+      pipeline = pipeline.webp({ quality: 85 });
+    } else {
+      pipeline = pipeline.jpeg({ quality: 85 });
+    }
+    const buf = await pipeline.toBuffer();
+    await fs.promises.writeFile(filePath, buf);
+  } catch (e) {
+    console.error("Compression error:", e.message);
+  }
+}
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function slugify(str) {
@@ -94,28 +158,69 @@ function xofToEur(xof) {
 
 // ─── PUBLIC ROUTES ────────────────────────────────────────────────────────────
 
+app.get("/robots.txt", (_req, res) => {
+  res.type("text/plain");
+  res.send(`User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: ${BASE_URL}/sitemap.xml\n`);
+});
+
+app.get("/sitemap.xml", async (_req, res) => {
+  let rooms = cacheGet("rooms:all");
+  if (!rooms) {
+    rooms = await prisma.room.findMany({ where: { active: true } });
+    cacheSet("rooms:all", rooms);
+  }
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>${BASE_URL}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>${BASE_URL}/chambres</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  ${rooms.map((r) => `<url><loc>${BASE_URL}/chambre/${r.id}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`).join("\n  ")}
+</urlset>`;
+  res.set("Content-Type", "application/xml");
+  res.set("Cache-Control", "public, max-age=3600");
+  res.send(xml);
+});
+
 app.get("/", async (_req, res) => {
-  const [rooms, settings] = await Promise.all([
-    prisma.room.findMany({ where: { active: true } }),
-    prisma.setting.findUnique({ where: { id: "main" } }),
-  ]);
+  let settings = cacheGet("settings");
+  let rooms = cacheGet("rooms:all");
+  if (!settings || !rooms) {
+    [rooms, settings] = await Promise.all([
+      prisma.room.findMany({ where: { active: true } }),
+      prisma.setting.findUnique({ where: { id: "main" } }),
+    ]);
+    cacheSet("settings", settings);
+    cacheSet("rooms:all", rooms);
+  }
   const featured = rooms.filter((r) => r.featured).slice(0, 3);
   res.render("index", { rooms, featured, settings, page: "home" });
 });
 
 app.get("/chambres", async (_req, res) => {
-  const [rooms, settings] = await Promise.all([
-    prisma.room.findMany({ where: { active: true } }),
-    prisma.setting.findUnique({ where: { id: "main" } }),
-  ]);
+  let settings = cacheGet("settings");
+  let rooms = cacheGet("rooms:all");
+  if (!settings || !rooms) {
+    [rooms, settings] = await Promise.all([
+      prisma.room.findMany({ where: { active: true } }),
+      prisma.setting.findUnique({ where: { id: "main" } }),
+    ]);
+    cacheSet("settings", settings);
+    cacheSet("rooms:all", rooms);
+  }
   res.render("rooms", { rooms, settings, page: "rooms" });
 });
 
 app.get("/chambre/:id", async (req, res) => {
-  const [room, settings] = await Promise.all([
-    prisma.room.findFirst({ where: { id: req.params.id, active: true } }),
-    prisma.setting.findUnique({ where: { id: "main" } }),
-  ]);
+  const cacheKey = `room:${req.params.id}`;
+  let settings = cacheGet("settings");
+  let room = cacheGet(cacheKey);
+  if (!settings || !room) {
+    [room, settings] = await Promise.all([
+      prisma.room.findFirst({ where: { id: req.params.id, active: true } }),
+      prisma.setting.findUnique({ where: { id: "main" } }),
+    ]);
+    if (settings) cacheSet("settings", settings);
+    if (room) cacheSet(cacheKey, room);
+  }
   if (!room) return res.redirect("/chambres");
   res.render("room-detail", {
     room,
@@ -428,7 +533,13 @@ app.post(
       const existing = await prisma.room.findUnique({ where: { id } });
       if (existing) id = `${id}-${Date.now().toString(36)}`;
 
-      const images = (req.files || []).map((f) => f.filename);
+      const imageFiles = req.files || [];
+      await Promise.all(
+        imageFiles.map((f) =>
+          compressImage(path.join(__dirname, "public/image", f.filename))
+        )
+      );
+      const images = imageFiles.map((f) => f.filename);
 
       await prisma.room.create({
         data: {
@@ -456,6 +567,7 @@ app.post(
           images,
         },
       });
+      cacheInvalidate("rooms");
       res.redirect("/admin/chambres?success=Chambre+créée+avec+succès");
     } catch (err) {
       console.error(err);
@@ -470,6 +582,40 @@ app.post(
   },
 );
 
+// Créer chambre sans images – réponse JSON (pour upload AJAX progressif)
+app.post(
+  "/admin/chambres/nouvelle/json",
+  requireAdmin,
+  uploadImages.none(),
+  async (req, res) => {
+    const { name, price, capacity, bedType, desc, badge, featured, composition, amenities } = req.body;
+    try {
+      let id = slugify(name);
+      const existing = await prisma.room.findUnique({ where: { id } });
+      if (existing) id = `${id}-${Date.now().toString(36)}`;
+      await prisma.room.create({
+        data: {
+          id, name,
+          price: parseInt(price),
+          capacity: parseInt(capacity),
+          bedType, desc,
+          badge: badge || "",
+          featured: featured === "on",
+          active: true,
+          composition: composition ? composition.split("\n").map((s) => s.trim()).filter(Boolean) : [],
+          amenities: amenities ? amenities.split("\n").map((s) => s.trim()).filter(Boolean) : [],
+          images: [],
+        },
+      });
+      cacheInvalidate("rooms");
+      res.json({ id });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Erreur lors de la création" });
+    }
+  },
+);
+
 // Activer / désactiver
 app.post("/admin/chambres/toggle/:id", requireAdmin, async (req, res) => {
   const room = await prisma.room.findUnique({ where: { id: req.params.id } });
@@ -478,6 +624,7 @@ app.post("/admin/chambres/toggle/:id", requireAdmin, async (req, res) => {
       where: { id: room.id },
       data: { active: !room.active },
     });
+  cacheInvalidate("rooms");
   const back = req.get("Referer") || "/admin/chambres";
   res.redirect(back);
 });
@@ -520,6 +667,7 @@ app.post("/admin/chambres/update/:id", requireAdmin, async (req, res) => {
           : undefined,
       },
     });
+    cacheInvalidate("rooms");
     res.redirect(
       `/admin/chambres/edit/${req.params.id}?success=Modifications+enregistrées`,
     );
@@ -530,7 +678,7 @@ app.post("/admin/chambres/update/:id", requireAdmin, async (req, res) => {
   }
 });
 
-// Upload de nouvelles photos
+// Upload de nouvelles photos (batch – fallback sans JS)
 app.post(
   "/admin/chambres/:id/images",
   requireAdmin,
@@ -538,12 +686,39 @@ app.post(
   async (req, res) => {
     const room = await prisma.room.findUnique({ where: { id: req.params.id } });
     if (!room) return res.redirect("/admin/chambres?error=Chambre+introuvable");
-    const newImages = (req.files || []).map((f) => f.filename);
+    const fileList = req.files || [];
+    await Promise.all(
+      fileList.map((f) =>
+        compressImage(path.join(__dirname, "public/image", f.filename))
+      )
+    );
+    const newImages = fileList.map((f) => f.filename);
     await prisma.room.update({
       where: { id: room.id },
       data: { images: [...room.images, ...newImages] },
     });
+    cacheInvalidate(`room:${room.id}`);
     res.redirect(`/admin/chambres/edit/${room.id}?success=Photos+ajoutées`);
+  },
+);
+
+// Upload d'une photo unique – JSON (pour progression AJAX)
+app.post(
+  "/admin/chambres/:id/images/single",
+  requireAdmin,
+  uploadImages.single("image"),
+  async (req, res) => {
+    const room = await prisma.room.findUnique({ where: { id: req.params.id } });
+    if (!room) return res.status(404).json({ error: "Chambre introuvable" });
+    if (!req.file) return res.status(400).json({ error: "Aucun fichier reçu" });
+    const filename = req.file.filename;
+    await compressImage(path.join(__dirname, "public/image", filename));
+    await prisma.room.update({
+      where: { id: room.id },
+      data: { images: [...room.images, filename] },
+    });
+    cacheInvalidate(`room:${room.id}`);
+    res.json({ filename, url: `/image/${filename}` });
   },
 );
 
@@ -563,6 +738,7 @@ app.post(
       if (fs.existsSync(filePath) && image.startsWith("room-"))
         fs.unlinkSync(filePath);
     }
+    cacheInvalidate(`room:${req.params.id}`);
     res.redirect(
       `/admin/chambres/edit/${req.params.id}?success=Photo+supprimée`,
     );
@@ -572,6 +748,7 @@ app.post(
 // Supprimer une chambre
 app.post("/admin/chambres/delete/:id", requireAdmin, async (req, res) => {
   await prisma.room.delete({ where: { id: req.params.id } });
+  cacheInvalidate("rooms");
   res.redirect("/admin/chambres?success=Chambre+supprimée");
 });
 
@@ -634,7 +811,57 @@ app.post("/admin/parametres", requireAdmin, async (req, res) => {
   };
   if (adminPlain?.trim()) data.adminPlain = adminPlain.trim();
   await prisma.setting.update({ where: { id: "main" }, data });
+  cacheInvalidate("settings");
   res.redirect("/admin/parametres?success=1");
+});
+
+// ─── MÉDIATHÈQUE ─────────────────────────────────────────────────────────────
+const IMAGE_EXTS = /\.(jpg|jpeg|png|webp|gif)$/i;
+
+app.get("/admin/media", requireAdmin, async (_req, res) => {
+  const settings = await prisma.setting.findUnique({ where: { id: "main" } });
+  res.render("admin/media", { settings });
+});
+
+app.get("/admin/media/list", requireAdmin, async (_req, res) => {
+  const imageDir = path.join(__dirname, "public/image");
+  const files = fs.readdirSync(imageDir).filter((f) => IMAGE_EXTS.test(f));
+  const rooms = await prisma.room.findMany({ select: { images: true } });
+  const usedSet = new Set(rooms.flatMap((r) => r.images));
+  const list = files
+    .map((filename) => {
+      const stats = fs.statSync(path.join(imageDir, filename));
+      return { filename, url: `/image/${encodeURIComponent(filename)}`, size: stats.size, date: stats.mtime, inUse: usedSet.has(filename) };
+    })
+    .sort((a, b) => b.date - a.date);
+  res.json(list);
+});
+
+app.post("/admin/media/upload", requireAdmin, uploadImages.array("images", 30), async (req, res) => {
+  const files = req.files || [];
+  await Promise.all(files.map((f) => compressImage(path.join(__dirname, "public/image", f.filename))));
+  res.json({ files: files.map((f) => ({ filename: f.filename, url: `/image/${encodeURIComponent(f.filename)}` })) });
+});
+
+app.post("/admin/media/delete", requireAdmin, async (req, res) => {
+  const { filename } = req.body;
+  if (!filename || !filename.startsWith("room-")) return res.status(400).json({ error: "Fichier non supprimable" });
+  const filePath = path.join(__dirname, "public/image", filename);
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  res.json({ success: true });
+});
+
+// Ajouter des images depuis la médiathèque à une chambre
+app.post("/admin/chambres/:id/images/from-library", requireAdmin, async (req, res) => {
+  const room = await prisma.room.findUnique({ where: { id: req.params.id } });
+  if (!room) return res.status(404).json({ error: "Chambre introuvable" });
+  const filenames = Array.isArray(req.body.filenames) ? req.body.filenames : [req.body.filenames].filter(Boolean);
+  const toAdd = filenames.filter((f) => typeof f === "string" && f.length > 0);
+  if (toAdd.length) {
+    await prisma.room.update({ where: { id: room.id }, data: { images: [...room.images, ...toAdd] } });
+    cacheInvalidate(`room:${room.id}`);
+  }
+  res.json({ success: true });
 });
 
 // ─── START ────────────────────────────────────────────────────────────────────

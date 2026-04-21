@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Médiathèque</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+
+<%- include('sidebar', { activePage: 'media', settings }) %>
+
+<main class="admin-main">
+  <div class="admin-topbar">
+    <h1 class="admin-page-title">Médiathèque</h1>
+    <button class="btn-admin-primary btn-sm" onclick="openUploadModal()">+ Ajouter des images</button>
+  </div>
+
+  <div class="admin-content">
+    <!-- Barre de recherche + filtres -->
+    <div class="media-toolbar">
+      <input type="text" id="mediaSearch" class="media-search-input" placeholder="Rechercher une image…" oninput="filterMedia()">
+      <div class="media-filter-chips">
+        <button class="chip active" data-filter="all" onclick="setFilter('all', this)">Toutes</button>
+        <button class="chip" data-filter="used" onclick="setFilter('used', this)">Utilisées</button>
+        <button class="chip" data-filter="unused" onclick="setFilter('unused', this)">Inutilisées</button>
+      </div>
+      <span class="media-count" id="mediaCount"></span>
+    </div>
+
+    <!-- Grille images -->
+    <div class="media-grid" id="mediaGrid">
+      <div class="media-loading">Chargement…</div>
+    </div>
+  </div>
+</main>
+
+<!-- Modal upload -->
+<div class="modal-backdrop" id="uploadModal" style="display:none;" onclick="closeUploadModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Ajouter des images</h3>
+      <button class="modal-close" onclick="closeUploadModal()">✕</button>
+    </div>
+    <div class="upload-zone" id="mediaUploadZone" style="padding:2rem 1rem;">
+      <div class="upload-zone-inner">
+        <div class="upload-icon">🖼️</div>
+        <p><strong>Glissez vos images ici</strong> ou cliquez pour choisir</p>
+        <small>JPG, PNG, WEBP · Max 15 Mo par image</small>
+        <input type="file" id="mediaFileInput" accept="image/*" multiple style="display:none;">
+        <button type="button" class="btn-admin-outline btn-sm" style="margin-top:0.75rem;"
+          onclick="document.getElementById('mediaFileInput').click()">Choisir des images</button>
+      </div>
+    </div>
+    <div id="mediaUploadList" style="display:none; margin-top:1rem;"></div>
+    <div class="modal-actions">
+      <button class="btn-admin-primary" id="startUploadBtn" style="display:none;" onclick="startUpload()">Envoyer</button>
+      <button class="btn-admin-outline" onclick="closeUploadModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal prévisualisation -->
+<div class="modal-backdrop" id="previewModal" style="display:none;" onclick="closePreviewModal(event)">
+  <div class="media-preview-box" onclick="event.stopPropagation()">
+    <button class="modal-close" style="position:absolute;top:1rem;right:1rem;" onclick="closePreviewModal()">✕</button>
+    <img id="previewImg" src="" alt="" style="max-width:100%;max-height:70vh;object-fit:contain;display:block;margin:0 auto;border-radius:8px;">
+    <div style="margin-top:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+      <div>
+        <p id="previewFilename" style="font-weight:600;font-size:0.9rem;color:var(--dark);word-break:break-all;"></p>
+        <p id="previewMeta" style="font-size:0.8rem;color:var(--muted);margin-top:0.2rem;"></p>
+      </div>
+      <div style="display:flex;gap:0.5rem;">
+        <button class="btn-admin-outline btn-sm" onclick="copyUrl()">Copier l'URL</button>
+        <button class="btn-xs btn-red" id="deleteBtn" onclick="deleteImage()">🗑 Supprimer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>
+<script>
+let allMedia = [];
+let currentFilter = 'all';
+let currentPreview = null;
+
+async function loadMedia() {
+  const resp = await fetch('/admin/media/list');
+  allMedia = await resp.json();
+  renderMedia();
+}
+
+function filterMedia() {
+  renderMedia();
+}
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.media-filter-chips .chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderMedia();
+}
+
+function renderMedia() {
+  const q = document.getElementById('mediaSearch').value.toLowerCase();
+  const grid = document.getElementById('mediaGrid');
+  let items = allMedia.filter(item => {
+    if (q && !item.filename.toLowerCase().includes(q)) return false;
+    if (currentFilter === 'used' && !item.inUse) return false;
+    if (currentFilter === 'unused' && item.inUse) return false;
+    return true;
+  });
+  document.getElementById('mediaCount').textContent = `${items.length} image${items.length > 1 ? 's' : ''}`;
+  if (!items.length) {
+    grid.innerHTML = '<div class="media-empty">Aucune image trouvée.</div>';
+    return;
+  }
+  grid.innerHTML = items.map(item => `
+    <div class="media-item" data-filename="${item.filename}" onclick="openPreview(${JSON.stringify(item).replace(/"/g,'&quot;')})">
+      <div class="media-item-img">
+        <img src="${item.url}" alt="${item.filename}" loading="lazy" decoding="async">
+        ${item.inUse ? '<span class="media-badge-used">Utilisée</span>' : ''}
+      </div>
+      <p class="media-item-name">${item.filename.length > 28 ? item.filename.substring(0,26)+'…' : item.filename}</p>
+      <p class="media-item-size">${formatSize(item.size)}</p>
+    </div>
+  `).join('');
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' o';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' Ko';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' Mo';
+}
+
+/* ── Prévisualisation ── */
+function openPreview(item) {
+  currentPreview = item;
+  document.getElementById('previewImg').src = item.url;
+  document.getElementById('previewFilename').textContent = item.filename;
+  document.getElementById('previewMeta').textContent = `${formatSize(item.size)} · ${item.inUse ? 'Utilisée dans une chambre' : 'Inutilisée'}`;
+  document.getElementById('deleteBtn').style.display = item.filename.startsWith('room-') ? '' : 'none';
+  document.getElementById('previewModal').style.display = 'flex';
+}
+function closePreviewModal(e) {
+  if (!e || e.target === document.getElementById('previewModal'))
+    document.getElementById('previewModal').style.display = 'none';
+}
+function copyUrl() {
+  const url = window.location.origin + currentPreview.url;
+  navigator.clipboard.writeText(url).then(() => alert('URL copiée : ' + url));
+}
+async function deleteImage() {
+  if (!currentPreview) return;
+  if (currentPreview.inUse) { alert('Cette image est utilisée par une chambre. Supprimez-la d\'abord de la chambre.'); return; }
+  if (!confirm('Supprimer définitivement « ' + currentPreview.filename + ' » ?')) return;
+  const resp = await fetch('/admin/media/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filename: currentPreview.filename }),
+  });
+  if (resp.ok) {
+    document.getElementById('previewModal').style.display = 'none';
+    allMedia = allMedia.filter(m => m.filename !== currentPreview.filename);
+    renderMedia();
+  } else {
+    alert('Impossible de supprimer ce fichier.');
+  }
+}
+
+/* ── Upload modal ── */
+let pendingFiles = [];
+function openUploadModal() {
+  pendingFiles = [];
+  document.getElementById('mediaUploadList').style.display = 'none';
+  document.getElementById('mediaUploadList').innerHTML = '';
+  document.getElementById('startUploadBtn').style.display = 'none';
+  document.getElementById('uploadModal').style.display = 'flex';
+}
+function closeUploadModal(e) {
+  if (!e || e.target === document.getElementById('uploadModal'))
+    document.getElementById('uploadModal').style.display = 'none';
+}
+document.getElementById('mediaFileInput').addEventListener('change', function() {
+  pendingFiles = [...this.files];
+  renderUploadList();
+});
+const uploadZone = document.getElementById('mediaUploadZone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault(); uploadZone.classList.remove('drag-over');
+  pendingFiles = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
+  renderUploadList();
+});
+function renderUploadList() {
+  const list = document.getElementById('mediaUploadList');
+  if (!pendingFiles.length) { list.style.display = 'none'; document.getElementById('startUploadBtn').style.display = 'none'; return; }
+  list.style.display = 'block';
+  document.getElementById('startUploadBtn').style.display = '';
+  list.innerHTML = pendingFiles.map((f, i) => `
+    <div class="upload-pending-item" id="pending-${i}">
+      <span>${f.name}</span>
+      <span class="upload-pending-size">${formatSize(f.size)}</span>
+      <div class="preview-progress-wrap" style="flex:1;margin:0 0.5rem;"><div class="preview-progress-bar" id="bar-${i}"></div></div>
+      <span class="upload-pending-status" id="status-${i}">–</span>
+    </div>
+  `).join('');
+}
+async function startUpload() {
+  document.getElementById('startUploadBtn').disabled = true;
+  for (let i = 0; i < pendingFiles.length; i++) {
+    document.getElementById('status-' + i).textContent = '…';
+    await uploadFile(pendingFiles[i], i);
+  }
+  document.getElementById('startUploadBtn').disabled = false;
+  setTimeout(() => { closeUploadModal(); loadMedia(); }, 600);
+}
+function uploadFile(file, idx) {
+  return new Promise(resolve => {
+    const xhr = new XMLHttpRequest();
+    const fd = new FormData();
+    fd.append('images', file);
+    const bar = document.getElementById('bar-' + idx);
+    const status = document.getElementById('status-' + idx);
+    xhr.upload.addEventListener('progress', ev => {
+      if (ev.lengthComputable) bar.style.width = Math.round(ev.loaded / ev.total * 100) + '%';
+    });
+    xhr.addEventListener('load', () => {
+      bar.style.width = '100%';
+      bar.style.background = xhr.status < 300 ? '#22c55e' : '#ef4444';
+      status.textContent = xhr.status < 300 ? '✓' : '✗';
+      resolve();
+    });
+    xhr.addEventListener('error', () => { status.textContent = '✗'; resolve(); });
+    xhr.open('POST', '/admin/media/upload');
+    xhr.send(fd);
+  });
+}
+
+loadMedia();
+</script>
+</body>
+</html>

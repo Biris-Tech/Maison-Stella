@@ -4,9 +4,60 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= room.name %> – <%= settings.siteName %></title>
+  <meta name="description" content="<%= room.desc.substring(0,160) %> | <%= room.capacity %> personnes · <%= room.bedType %> · <%= room.price.toLocaleString('fr-FR') %> FCFA/nuit.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="<%= canonical %>">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="product">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:site_name" content="<%= settings.siteName %>">
+  <meta property="og:title" content="<%= room.name %> – <%= settings.siteName %>">
+  <meta property="og:description" content="<%= room.desc.substring(0,200) %>">
+  <meta property="og:url" content="<%= canonical %>">
+  <% if (room.images.length > 0) { %>
+  <meta property="og:image" content="<%= baseUrl %>/image/<%= encodeURIComponent(room.images[0]) %>">
+  <% } %>
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= room.name %> – <%= settings.siteName %>">
+  <meta name="twitter:description" content="<%= room.desc.substring(0,200) %>">
+  <% if (room.images.length > 0) { %>
+  <meta name="twitter:image" content="<%= baseUrl %>/image/<%= encodeURIComponent(room.images[0]) %>">
+  <% } %>
+
+  <!-- JSON-LD HotelRoom -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HotelRoom",
+    "name": "<%= room.name %>",
+    "description": "<%= room.desc.replace(/"/g,'&quot;').replace(/\n/g,' ') %>",
+    "url": "<%= canonical %>",
+    "occupancy": { "@type": "QuantitativeValue", "maxValue": <%= room.capacity %> },
+    "bed": [{ "@type": "BedDetails", "typeOfBed": "<%= room.bedType %>" }],
+    <% if (room.images.length > 0) { %>"image": "<%= baseUrl %>/image/<%= encodeURIComponent(room.images[0]) %>",<% } %>
+    "offers": {
+      "@type": "Offer",
+      "price": "<%= room.price %>",
+      "priceCurrency": "XOF",
+      "availability": "https://schema.org/InStock"
+    },
+    "containedInPlace": {
+      "@type": "LodgingBusiness",
+      "name": "<%= settings.siteName %>",
+      "address": "<%= settings.address.replace(/"/g,'&quot;') %>"
+    }
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <% if (room.images.length > 0) { %>
+  <link rel="preload" as="image" href="/image/<%= encodeURIComponent(room.images[0]) %>">
+  <% } %>
   <link rel="stylesheet" href="/css/main.css">
   <% if (paypalClientId) { %>
   <script src="https://www.paypal.com/sdk/js?client-id=<%= paypalClientId %>&currency=EUR" defer></script>

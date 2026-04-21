@@ -204,9 +204,55 @@ img { display: block; max-width: 100%; }
 .upload-zone p { font-size: 0.95rem; color: var(--dark); margin-bottom: 0.3rem; }
 .upload-zone small { font-size: 0.78rem; color: var(--muted); }
 .upload-preview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-top: 1rem; }
-.preview-thumb { text-align: center; }
-.preview-thumb img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+.preview-thumb { text-align: center; position: relative; }
+.preview-thumb img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); transition: opacity 0.2s; }
 .preview-thumb span { font-size: 0.7rem; color: var(--muted); display: block; margin-top: 0.3rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.preview-progress-wrap { position: absolute; bottom: 0; left: 0; right: 0; height: 5px; background: rgba(0,0,0,0.12); border-radius: 0 0 8px 8px; overflow: hidden; }
+.preview-progress-bar { height: 100%; width: 0%; background: var(--primary); transition: width 0.15s ease; }
+.preview-check { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 1.6rem; line-height: 1; pointer-events: none; }
+.preview-thumb.upload-done img { opacity: 0.55; }
+.preview-thumb.upload-done .preview-progress-bar { width: 100%; background: #22c55e; }
+.preview-thumb.upload-done .preview-check { display: block; }
+.preview-thumb.upload-error .preview-progress-bar { width: 100%; background: #ef4444; }
+
+/* ── MÉDIATHÈQUE ── */
+.media-toolbar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.media-search-input { border: 1.5px solid var(--border); border-radius: 8px; padding: 0.55rem 0.9rem; font-family: var(--font); font-size: 0.88rem; color: var(--dark); outline: none; transition: border-color 0.2s; min-width: 220px; background: var(--bg-white); }
+.media-search-input:focus { border-color: var(--primary); }
+.media-filter-chips { display: flex; gap: 0.4rem; }
+.media-count { font-size: 0.82rem; color: var(--muted); margin-left: auto; }
+.media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; }
+.media-loading, .media-empty { grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--muted); font-size: 0.9rem; }
+.media-item { border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; background: var(--bg-white); }
+.media-item:hover { border-color: var(--primary); box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.media-item.selected { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,56,92,0.15); }
+.media-item-img { aspect-ratio: 1; overflow: hidden; position: relative; background: var(--bg); }
+.media-item-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+.media-item:hover .media-item-img img { transform: scale(1.05); }
+.media-badge-used { position: absolute; top: 0.35rem; left: 0.35rem; background: #22c55e; color: #fff; font-size: 0.6rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 100px; }
+.media-item-name { font-size: 0.68rem; color: var(--muted); padding: 0.3rem 0.5rem 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.media-item-size { font-size: 0.65rem; color: var(--muted); padding: 0.1rem 0.5rem 0.4rem; opacity: 0.7; }
+/* Modals */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; backdrop-filter: blur(4px); }
+.modal-box { background: var(--bg-white); border-radius: var(--radius); padding: 1.75rem; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; position: relative; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+.modal-header h3 { font-size: 1.1rem; font-weight: 700; color: var(--dark); }
+.modal-close { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--muted); padding: 0.25rem; border-radius: 4px; transition: color 0.2s; }
+.modal-close:hover { color: var(--dark); }
+.modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem; }
+.media-preview-box { background: var(--bg-white); border-radius: var(--radius); padding: 2rem; width: 100%; max-width: 700px; max-height: 92vh; overflow-y: auto; position: relative; }
+/* Library selector modal (dans room forms) */
+.library-modal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.5rem; max-height: 55vh; overflow-y: auto; padding: 0.25rem; }
+.library-modal-item { border: 2px solid var(--border); border-radius: 8px; overflow: hidden; cursor: pointer; position: relative; aspect-ratio: 1; background: var(--bg); }
+.library-modal-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.25s; }
+.library-modal-item:hover img { transform: scale(1.05); }
+.library-modal-item.selected { border-color: var(--primary); }
+.library-modal-item .lib-check { display: none; position: absolute; top: 0.3rem; right: 0.3rem; background: var(--primary); color: #fff; font-size: 0.7rem; font-weight: 700; width: 20px; height: 20px; border-radius: 50%; align-items: center; justify-content: center; }
+.library-modal-item.selected .lib-check { display: flex; }
+/* Upload pending list */
+.upload-pending-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
+.upload-pending-size { color: var(--muted); font-size: 0.75rem; white-space: nowrap; }
+.upload-pending-status { min-width: 1.25rem; text-align: center; font-size: 0.9rem; }
 
 @media (max-width: 768px) {
   .sidebar { display: none; }
@@ -216,4 +262,8 @@ img { display: block; max-width: 100%; }
   .admin-content { padding: 1.25rem; }
   .image-admin-grid { grid-template-columns: repeat(3, 1fr); }
   .upload-preview { grid-template-columns: repeat(3, 1fr); }
+  .media-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+  .media-toolbar { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .media-search-input { width: 100%; min-width: unset; }
+  .media-count { margin-left: 0; }
 }

@@ -145,7 +145,12 @@
           <!-- Upload -->
           <form method="POST" action="/admin/chambres/<%= room.id %>/images"
             enctype="multipart/form-data" style="margin-top:1.25rem; border-top:1px solid var(--border); padding-top:1.25rem;">
-            <p style="font-size:0.82rem; font-weight:600; color:var(--dark); margin-bottom:0.75rem;">Ajouter des photos</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+              <p style="font-size:0.82rem; font-weight:600; color:var(--dark);">Ajouter des photos</p>
+              <button type="button" class="btn-admin-ghost btn-sm" onclick="openLibraryModal()">
+                🖼 Médiathèque
+              </button>
+            </div>
             <div class="upload-zone" id="uploadZone" style="padding:1.5rem 1rem;">
               <div class="upload-zone-inner">
                 <div class="upload-icon" style="font-size:1.5rem;">🖼️</div>
@@ -167,6 +172,23 @@
   </div>
 </main>
 
+<!-- Modal médiathèque -->
+<div class="modal-backdrop" id="libraryModal" style="display:none;" onclick="closeLibraryModal(event)">
+  <div class="modal-box" style="max-width:700px;" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Choisir depuis la médiathèque</h3>
+      <button class="modal-close" onclick="closeLibraryModal()">✕</button>
+    </div>
+    <input type="text" placeholder="Rechercher…" class="media-search-input" style="width:100%;margin-bottom:1rem;" oninput="filterLibrary(this.value)">
+    <div class="library-modal-grid" id="libraryGrid">Chargement…</div>
+    <div class="modal-actions">
+      <span id="libSelCount" style="font-size:0.82rem;color:var(--muted);margin-right:auto;">0 sélectionnée(s)</span>
+      <button class="btn-admin-outline" onclick="closeLibraryModal()">Annuler</button>
+      <button class="btn-admin-primary" onclick="confirmLibrarySelection()">Ajouter à la chambre</button>
+    </div>
+  </div>
+</div>
+
 <script src="/js/admin.js"></script>
 <script>
   /* ── Confirmation inline suppression photo ── */
@@ -179,10 +201,15 @@
     document.getElementById('overlay-' + idx).style.display = 'flex';
   }
 
-  /* ── Upload preview ── */
-  const input   = document.getElementById('imgInput');
-  const preview = document.getElementById('previewGrid');
-  const zone    = document.getElementById('uploadZone');
+  /* ── Upload preview + AJAX progressif ── */
+  const ROOM_ID   = '<%= room.id %>';
+  const input     = document.getElementById('imgInput');
+  const preview   = document.getElementById('previewGrid');
+  const zone      = document.getElementById('uploadZone');
+  const uploadForm = zone.closest('form');
+  const submitBtn  = uploadForm.querySelector('button[type="submit"]');
+
+  let previewItems = []; // [{file, div}]
 
   input.addEventListener('change', showPreviews);
 
@@ -198,16 +225,115 @@
 
   function showPreviews() {
     preview.innerHTML = '';
+    previewItems = [];
     [...input.files].forEach(file => {
+      const div = document.createElement('div');
+      div.className = 'preview-thumb';
+      div.innerHTML = `<div style="width:100%;aspect-ratio:1;background:var(--bg);border-radius:8px;border:1px solid var(--border);"></div>
+        <div class="preview-progress-wrap"><div class="preview-progress-bar"></div></div>
+        <span class="preview-check">✓</span>
+        <span>${file.name}</span>`;
+      preview.appendChild(div);
+      previewItems.push({ file, div });
       const reader = new FileReader();
-      reader.onload = e => {
-        const div = document.createElement('div');
-        div.className = 'preview-thumb';
-        div.innerHTML = `<img src="${e.target.result}"><span>${file.name}</span>`;
-        preview.appendChild(div);
+      reader.onload = ev => {
+        const placeholder = div.querySelector('div:first-child');
+        if (placeholder) {
+          const img = document.createElement('img');
+          img.src = ev.target.result;
+          img.alt = '';
+          div.replaceChild(img, placeholder);
+        }
       };
       reader.readAsDataURL(file);
     });
+  }
+
+  uploadForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const items = [...previewItems];
+    if (!items.length) return;
+    submitBtn.disabled = true;
+    for (let i = 0; i < items.length; i++) {
+      submitBtn.textContent = `Upload (${i}/${items.length})…`;
+      await uploadImage(items[i].file, ROOM_ID, items[i].div);
+    }
+    window.location.href = `/admin/chambres/edit/${ROOM_ID}?success=Photos+ajoutées`;
+  });
+
+  function uploadImage(file, roomId, thumb) {
+    return new Promise(resolve => {
+      const xhr = new XMLHttpRequest();
+      const fd = new FormData();
+      fd.append('image', file);
+      const bar = thumb.querySelector('.preview-progress-bar');
+      xhr.upload.addEventListener('progress', ev => {
+        if (ev.lengthComputable)
+          bar.style.width = Math.round(ev.loaded / ev.total * 100) + '%';
+      });
+      xhr.addEventListener('load', () => {
+        thumb.classList.add(xhr.status < 300 ? 'upload-done' : 'upload-error');
+        resolve();
+      });
+      xhr.addEventListener('error', () => { thumb.classList.add('upload-error'); resolve(); });
+      xhr.open('POST', `/admin/chambres/${roomId}/images/single`);
+      xhr.send(fd);
+    });
+  }
+
+  /* ── Médiathèque ── */
+  let libAllImages = [];
+  let libSelected = new Set();
+
+  async function openLibraryModal() {
+    libSelected.clear();
+    document.getElementById('libraryModal').style.display = 'flex';
+    const resp = await fetch('/admin/media/list');
+    libAllImages = await resp.json();
+    renderLibrary(libAllImages);
+  }
+  function closeLibraryModal(e) {
+    if (!e || e.target === document.getElementById('libraryModal'))
+      document.getElementById('libraryModal').style.display = 'none';
+  }
+  function filterLibrary(q) {
+    const filtered = q ? libAllImages.filter(i => i.filename.toLowerCase().includes(q.toLowerCase())) : libAllImages;
+    renderLibrary(filtered);
+  }
+  function renderLibrary(items) {
+    const grid = document.getElementById('libraryGrid');
+    if (!items.length) { grid.innerHTML = '<p style="color:var(--muted);padding:1rem;">Aucune image.</p>'; return; }
+    grid.innerHTML = items.map(item => `
+      <div class="library-modal-item ${libSelected.has(item.filename) ? 'selected' : ''}"
+        onclick="toggleLibItem('${item.filename}', this)">
+        <img src="${item.url}" alt="" loading="lazy" decoding="async">
+        <div class="lib-check">✓</div>
+      </div>
+    `).join('');
+    updateLibCount();
+  }
+  function toggleLibItem(filename, el) {
+    if (libSelected.has(filename)) { libSelected.delete(filename); el.classList.remove('selected'); }
+    else { libSelected.add(filename); el.classList.add('selected'); }
+    updateLibCount();
+  }
+  function updateLibCount() {
+    document.getElementById('libSelCount').textContent = `${libSelected.size} sélectionnée(s)`;
+  }
+  async function confirmLibrarySelection() {
+    if (!libSelected.size) { closeLibraryModal(); return; }
+    const filenames = [...libSelected];
+    const resp = await fetch(`/admin/chambres/${ROOM_ID}/images/from-library`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filenames }),
+    });
+    if (resp.ok) {
+      closeLibraryModal();
+      window.location.href = `/admin/chambres/edit/${ROOM_ID}?success=Photos+ajoutées+depuis+la+médiathèque`;
+    } else {
+      alert('Erreur lors de l\'ajout.');
+    }
   }
 </script>
 </body>
