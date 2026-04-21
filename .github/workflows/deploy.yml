@@ -1,4 +1,4 @@
-name: Deploy Maison Stella to cPanel
+name: Deploy Maison Stella
 
 on:
   push:
@@ -13,16 +13,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Deploy via SSH to cPanel
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ secrets.CPANEL_HOST }}
-          username: ${{ secrets.CPANEL_USER }}
-          key: ${{ secrets.CPANEL_SSH_KEY }}
-          port: 22
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
           script: |
-            cd ${{ secrets.CPANEL_APP_PATH }}
+            cd ${{ secrets.DEPLOY_PATH }}
             git pull origin main
-            npm install
-            npm run build || true
-            pm2 restart ${{ secrets.CPANEL_APP_NAME }} || pm2 start server.js --name ${{ secrets.CPANEL_APP_NAME }}
+            printf "MYSQL_ROOT_PASSWORD=%s\nMYSQL_DATABASE=%s\nMYSQL_USER=%s\nMYSQL_PASSWORD=%s\nSESSION_SECRET=%s\nPAYPAL_CLIENT_ID=%s\nPAYPAL_SECRET=%s\nPAYPAL_ENV=%s\nFEDAPAY_SECRET_KEY=%s\nFEDAPAY_ENV=%s\n" \
+              "${{ secrets.MYSQL_ROOT_PASSWORD }}" \
+              "${{ secrets.MYSQL_DATABASE }}" \
+              "${{ secrets.MYSQL_USER }}" \
+              "${{ secrets.MYSQL_PASSWORD }}" \
+              "${{ secrets.SESSION_SECRET }}" \
+              "${{ secrets.PAYPAL_CLIENT_ID }}" \
+              "${{ secrets.PAYPAL_SECRET }}" \
+              "${{ secrets.PAYPAL_ENV }}" \
+              "${{ secrets.FEDAPAY_SECRET_KEY }}" \
+              "${{ secrets.FEDAPAY_ENV }}" > .env
+            docker compose down
+            docker compose up --build -d

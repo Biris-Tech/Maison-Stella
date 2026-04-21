@@ -1,0 +1,42 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: maison-stella-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "8007:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: maison-stella-app
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8006:3000"
+    environment:
+      DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}
+      BASE_URL: http://89.117.59.132:8006
+      SESSION_SECRET: ${SESSION_SECRET}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+      PAYPAL_SECRET: ${PAYPAL_SECRET}
+      PAYPAL_ENV: ${PAYPAL_ENV}
+      FEDAPAY_SECRET_KEY: ${FEDAPAY_SECRET_KEY}
+      FEDAPAY_ENV: ${FEDAPAY_ENV}
+    command: ["npm", "run", "start:prod"]
+
+volumes:
+  db_data:

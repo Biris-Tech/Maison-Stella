@@ -3,27 +3,27 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model Room {
-  id          String   @id @map("_id")
+  id          String  @id
   name        String
   price       Int
   capacity    Int
   bedType     String
-  desc        String
-  badge       String   @default("")
-  composition String[]
-  amenities   String[]
-  images      String[]
-  featured    Boolean  @default(false)
-  active      Boolean  @default(true)
+  desc        String  @db.Text
+  badge       String  @default("")
+  composition Json
+  amenities   Json
+  images      Json
+  featured    Boolean @default(false)
+  active      Boolean @default(true)
 }
 
 model Booking {
-  id            String   @id @map("_id")
+  id            String   @id
   room          String
   roomId        String?
   checkin       String
@@ -34,24 +34,24 @@ model Booking {
   guests        Int?
   nights        Int?
   totalAmount   Int?
-  status        String   @default("pending")   // pending, confirmed, cancelled
-  paymentMethod String?                         // paypal, fedapay
-  paymentStatus String   @default("unpaid")    // unpaid, paid, failed
+  status        String   @default("pending")
+  paymentMethod String?
+  paymentStatus String   @default("unpaid")
   paymentId     String?
   createdAt     DateTime @default(now())
 }
 
 model Setting {
-  id          String @id @map("_id")
+  id          String @id
   siteName    String
   tagline     String
-  description String
+  description String @db.Text
   address     String
   phone       String
   email       String
   heroImage   String
-  aboutText   String
-  aboutText2  String
+  aboutText   String @db.Text
+  aboutText2  String @db.Text
   adminPlain  String @default("stella2026")
   services    Json
 }
