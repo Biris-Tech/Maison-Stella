@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= post.title %> – <%= settings.siteName %></title>
+  <meta name="description" content="<%= post.excerpt ? post.excerpt.substring(0,160) : post.title %>">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="<%= canonical %>">
+  <meta property="og:type" content="article">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:site_name" content="<%= settings.siteName %>">
+  <meta property="og:title" content="<%= post.title %>">
+  <meta property="og:description" content="<%= post.excerpt ? post.excerpt.substring(0,200) : post.title %>">
+  <meta property="og:url" content="<%= canonical %>">
+  <% if (post.coverImage) { %>
+  <meta property="og:image" content="<%= baseUrl %>/image/<%= encodeURIComponent(post.coverImage) %>">
+  <% } %>
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= post.title %>">
+  <meta name="twitter:description" content="<%= post.excerpt ? post.excerpt.substring(0,200) : post.title %>">
+  <% if (post.coverImage) { %>
+  <meta name="twitter:image" content="<%= baseUrl %>/image/<%= encodeURIComponent(post.coverImage) %>">
+  <% } %>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "<%= post.title.replace(/"/g,'&quot;') %>",
+    "description": "<%= (post.excerpt || '').replace(/"/g,'&quot;') %>",
+    "url": "<%= canonical %>",
+    "datePublished": "<%= post.publishedAt %>",
+    "author": { "@type": "Person", "name": "<%= post.authorName %>" },
+    "publisher": { "@type": "Organization", "name": "<%= settings.siteName %>" }
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="icon" href="/image/logo.png" type="image/png">
+  <style>
+    .post-hero { background: var(--dark); padding: 5rem 0 0; }
+    .post-hero-content { max-width: 760px; margin: 0 auto; padding: 0 2rem 2.5rem; color: #fff; }
+    .post-breadcrumb { font-size: 0.82rem; color: rgba(255,255,255,0.5); margin-bottom: 1rem; }
+    .post-breadcrumb a { color: rgba(255,255,255,0.5); text-decoration: none; }
+    .post-breadcrumb a:hover { color: #fff; }
+    .post-title { font-size: clamp(1.6rem,4vw,2.8rem); font-weight: 700; line-height: 1.25; margin-bottom: 1rem; }
+    .post-meta { font-size: 0.88rem; color: rgba(255,255,255,0.55); display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .post-cover { width: 100%; max-height: 480px; object-fit: cover; display: block; }
+    .post-body { max-width: 760px; margin: 0 auto; padding: 3rem 2rem; }
+    .post-body .ql-content, .post-body .post-content { line-height: 1.85; font-size: 1.05rem; color: var(--text); }
+    .post-body h1,.post-body h2,.post-body h3 { color: var(--dark); font-weight: 700; margin: 2rem 0 0.75rem; }
+    .post-body h2 { font-size: 1.5rem; }
+    .post-body h3 { font-size: 1.2rem; }
+    .post-body p { margin-bottom: 1.25rem; }
+    .post-body ul, .post-body ol { padding-left: 1.5rem; margin-bottom: 1.25rem; }
+    .post-body li { margin-bottom: 0.4rem; }
+    .post-body blockquote { border-left: 4px solid var(--primary); padding: 0.75rem 1.25rem; background: var(--bg-gray); border-radius: 0 8px 8px 0; margin: 1.5rem 0; font-style: italic; color: var(--muted); }
+    .post-body img { max-width: 100%; border-radius: 12px; margin: 1.5rem 0; }
+    .post-body a { color: var(--primary); text-decoration: underline; }
+    .share-section { border-top: 1px solid var(--border); padding-top: 2rem; margin-top: 2rem; }
+    .share-title { font-size: 0.9rem; font-weight: 600; color: var(--dark); margin-bottom: 1rem; }
+    .share-buttons { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .share-btn-wa { display: inline-flex; align-items: center; gap: 0.4rem; background: #25D366; color: #fff; padding: 0.6rem 1.1rem; border-radius: 8px; font-size: 0.88rem; font-weight: 600; text-decoration: none; }
+    .share-btn-fb { display: inline-flex; align-items: center; gap: 0.4rem; background: #1877F2; color: #fff; padding: 0.6rem 1.1rem; border-radius: 8px; font-size: 0.88rem; font-weight: 600; text-decoration: none; }
+    .share-btn-copy { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--bg-gray); color: var(--dark); border: 1px solid var(--border); padding: 0.6rem 1.1rem; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+    .share-btn-copy:hover { background: var(--border); }
+    .post-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .post-nav { max-width: 760px; margin: 0 auto; padding: 0 2rem 4rem; }
+  </style>
+</head>
+<body>
+
+<%- include('../partials/nav', { page: 'blog', settings }) %>
+
+<div class="post-hero">
+  <div class="post-hero-content">
+    <p class="post-breadcrumb"><a href="/">Accueil</a> / <a href="/blog">Blog</a> / <%= post.title %></p>
+    <h1 class="post-title"><%= post.title %></h1>
+    <div class="post-meta">
+      <span>Par <strong style="color:rgba(255,255,255,0.85)"><%= post.authorName %></strong></span>
+      <span>·</span>
+      <span><%= new Date(post.publishedAt).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) %></span>
+      <% if (post.tags && post.tags.length) { %>
+      <span>·</span>
+      <span><%= post.tags.join(', ') %></span>
+      <% } %>
+    </div>
+  </div>
+  <% if (post.coverImage) { %>
+  <img src="/image/<%= encodeURIComponent(post.coverImage) %>" alt="<%= post.title %>" class="post-cover">
+  <% } %>
+</div>
+
+<div class="post-body">
+  <% if (post.tags && post.tags.length) { %>
+  <div class="post-tags">
+    <% post.tags.forEach(t => { %><span class="amenity-tag"><%= t %></span><% }) %>
+  </div>
+  <% } %>
+
+  <div class="post-content"><%- post.content %></div>
+
+  <div class="share-section">
+    <p class="share-title">Partager cet article</p>
+    <div class="share-buttons">
+      <a href="https://wa.me/?text=<%= encodeURIComponent(post.title + ' — ' + canonical) %>" target="_blank" rel="noopener" class="share-btn-wa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.122 1.535 5.855L0 24l6.335-1.508A11.93 11.93 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.8 9.8 0 0 1-5.003-1.366l-.36-.214-3.727.977.995-3.638-.234-.374A9.78 9.78 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
+        WhatsApp
+      </a>
+      <a href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent(canonical) %>" target="_blank" rel="noopener" class="share-btn-fb">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        Facebook
+      </a>
+      <button class="share-btn-copy" onclick="navigator.clipboard.writeText('<%= canonical %>').then(()=>{ this.textContent='Copié !'; setTimeout(()=>this.innerHTML='<svg width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\'><rect x=\'9\' y=\'9\' width=\'13\' height=\'13\' rx=\'2\'/><path d=\'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1\'/></svg> Copier le lien',2000); })">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copier le lien
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="post-nav">
+  <a href="/blog" class="btn-outline">← Retour au blog</a>
+</div>
+
+<%- include('../partials/footer', { settings }) %>
+<script src="/js/main.js"></script>
+</body>
+</html>

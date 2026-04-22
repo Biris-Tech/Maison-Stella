@@ -7,6 +7,7 @@ const fs = require("fs");
 const sharp = require("sharp");
 const compression = require("compression");
 const nodemailer = require("nodemailer");
+const bcrypt = require("bcryptjs");
 const prisma = require("./lib/prisma");
 
 // ─── EMAIL ────────────────────────────────────────────────────────────────────
@@ -192,9 +193,34 @@ function slugify(str) {
     .replace(/^-+|-+$/g, "");
 }
 
-function requireAdmin(req, res, next) {
-  if (req.session?.admin) return next();
+// ─── AUTH HELPERS ─────────────────────────────────────────────────────────────
+function requireAuth(req, res, next) {
+  if (req.session?.user) return next();
   res.redirect("/admin/login");
+}
+
+function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!req.session?.user) return res.redirect("/admin/login");
+    if (roles.includes(req.session.user.role)) return next();
+    res.status(403).render("admin/403", { settings: res.locals.settings || null, currentUser: req.session.user });
+  };
+}
+
+async function logActivity(req, action, details = null) {
+  if (!req.session?.user) return;
+  const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.socket?.remoteAddress || "";
+  prisma.activityLog.create({
+    data: { userId: req.session.user.id, userName: req.session.user.name, action, details, ip },
+  }).catch(() => {});
+}
+
+async function injectAdminLocals(req, res, next) {
+  try {
+    res.locals.settings = res.locals.settings || await prisma.setting.findUnique({ where: { id: "main" } });
+  } catch { res.locals.settings = null; }
+  res.locals.currentUser = req.session?.user || null;
+  next();
 }
 
 async function injectUnreadCount(_req, res, next) {
@@ -203,6 +229,8 @@ async function injectUnreadCount(_req, res, next) {
   } catch { res.locals.unreadCount = 0; }
   next();
 }
+
+app.use("/admin", injectAdminLocals);
 app.use("/admin", injectUnreadCount);
 
 // PayPal helpers
@@ -547,33 +575,36 @@ body{font-family:-apple-system,sans-serif;background:#f4f4f4;margin:0;padding:0}
 
 // ─── ADMIN AUTH ───────────────────────────────────────────────────────────────
 
-app.get("/admin", requireAdmin, (_req, res) =>
+app.get("/admin", requireAuth, (_req, res) =>
   res.redirect("/admin/dashboard"),
 );
 
 app.get("/admin/login", (req, res) => {
-  if (req.session.admin) return res.redirect("/admin/dashboard");
+  if (req.session.user) return res.redirect("/admin/dashboard");
   res.render("admin/login", { error: null });
 });
 
 app.post("/admin/login", async (req, res) => {
-  const { password } = req.body;
-  const settings = await prisma.setting.findUnique({ where: { id: "main" } });
-  if (password === (settings?.adminPlain || "stella2026")) {
-    req.session.admin = true;
-    return res.redirect("/admin/dashboard");
-  }
-  res.render("admin/login", { error: "Mot de passe incorrect." });
+  const { email, password } = req.body;
+  if (!email || !password) return res.render("admin/login", { error: "Veuillez remplir tous les champs." });
+  const user = await prisma.adminUser.findUnique({ where: { email: email.toLowerCase().trim() } });
+  if (!user || !user.active) return res.render("admin/login", { error: "Identifiants incorrects." });
+  const ok = await bcrypt.compare(password, user.passwordHash);
+  if (!ok) return res.render("admin/login", { error: "Identifiants incorrects." });
+  req.session.user = { id: user.id, name: user.name, email: user.email, role: user.role };
+  logActivity(req, "LOGIN");
+  res.redirect("/admin/dashboard");
 });
 
 app.get("/admin/logout", (req, res) => {
+  logActivity(req, "LOGOUT");
   req.session.destroy();
   res.redirect("/admin/login");
 });
 
 // ─── ADMIN DASHBOARD ──────────────────────────────────────────────────────────
 
-app.get("/admin/dashboard", requireAdmin, async (_req, res) => {
+app.get("/admin/dashboard", requireAuth, async (_req, res) => {
   const [rooms, bookings, settings] = await Promise.all([
     prisma.room.findMany(),
     prisma.booking.findMany({ orderBy: { createdAt: "desc" } }),
@@ -596,7 +627,7 @@ app.get("/admin/dashboard", requireAdmin, async (_req, res) => {
 
 // ─── ADMIN CHAMBRES ───────────────────────────────────────────────────────────
 
-app.get("/admin/chambres", requireAdmin, async (req, res) => {
+app.get("/admin/chambres", requireAuth, async (req, res) => {
   const [rooms, settings] = await Promise.all([
     prisma.room.findMany(),
     prisma.setting.findUnique({ where: { id: "main" } }),
@@ -610,7 +641,7 @@ app.get("/admin/chambres", requireAdmin, async (req, res) => {
 });
 
 // Modifier une chambre – page dédiée
-app.get("/admin/chambres/edit/:id", requireAdmin, async (req, res) => {
+app.get("/admin/chambres/edit/:id", requireAuth, async (req, res) => {
   const [room, settings] = await Promise.all([
     prisma.room.findUnique({ where: { id: req.params.id } }),
     prisma.setting.findUnique({ where: { id: "main" } }),
@@ -625,7 +656,7 @@ app.get("/admin/chambres/edit/:id", requireAdmin, async (req, res) => {
 });
 
 // Créer une chambre – formulaire
-app.get("/admin/chambres/nouvelle", requireAdmin, async (_req, res) => {
+app.get("/admin/chambres/nouvelle", requireAuth, async (_req, res) => {
   const settings = await prisma.setting.findUnique({ where: { id: "main" } });
   res.render("admin/room-create", { settings, error: null });
 });
@@ -633,7 +664,7 @@ app.get("/admin/chambres/nouvelle", requireAdmin, async (_req, res) => {
 // Créer une chambre – traitement
 app.post(
   "/admin/chambres/nouvelle",
-  requireAdmin,
+  requireAuth,
   uploadImages.array("images", 20),
   async (req, res) => {
     const {
@@ -705,7 +736,7 @@ app.post(
 // Créer chambre sans images – réponse JSON (pour upload AJAX progressif)
 app.post(
   "/admin/chambres/nouvelle/json",
-  requireAdmin,
+  requireAuth,
   uploadImages.none(),
   async (req, res) => {
     const { name, price, capacity, bedType, desc, badge, featured, composition, amenities } = req.body;
@@ -737,7 +768,7 @@ app.post(
 );
 
 // Activer / désactiver
-app.post("/admin/chambres/toggle/:id", requireAdmin, async (req, res) => {
+app.post("/admin/chambres/toggle/:id", requireAuth, async (req, res) => {
   const room = await prisma.room.findUnique({ where: { id: req.params.id } });
   if (room)
     await prisma.room.update({
@@ -750,7 +781,7 @@ app.post("/admin/chambres/toggle/:id", requireAdmin, async (req, res) => {
 });
 
 // Modifier les infos texte
-app.post("/admin/chambres/update/:id", requireAdmin, async (req, res) => {
+app.post("/admin/chambres/update/:id", requireAuth, async (req, res) => {
   const {
     name,
     price,
@@ -801,7 +832,7 @@ app.post("/admin/chambres/update/:id", requireAdmin, async (req, res) => {
 // Upload de nouvelles photos (batch – fallback sans JS)
 app.post(
   "/admin/chambres/:id/images",
-  requireAdmin,
+  requireAuth,
   uploadImages.array("images", 20),
   async (req, res) => {
     const room = await prisma.room.findUnique({ where: { id: req.params.id } });
@@ -825,7 +856,7 @@ app.post(
 // Upload d'une photo unique – JSON (pour progression AJAX)
 app.post(
   "/admin/chambres/:id/images/single",
-  requireAdmin,
+  requireAuth,
   uploadImages.single("image"),
   async (req, res) => {
     const room = await prisma.room.findUnique({ where: { id: req.params.id } });
@@ -845,7 +876,7 @@ app.post(
 // Supprimer une photo
 app.post(
   "/admin/chambres/:id/images/delete",
-  requireAdmin,
+  requireAuth,
   async (req, res) => {
     const { image } = req.body;
     const room = await prisma.room.findUnique({ where: { id: req.params.id } });
@@ -866,7 +897,7 @@ app.post(
 );
 
 // Supprimer une chambre
-app.post("/admin/chambres/delete/:id", requireAdmin, async (req, res) => {
+app.post("/admin/chambres/delete/:id", requireAuth, async (req, res) => {
   await prisma.room.delete({ where: { id: req.params.id } });
   cacheInvalidate("rooms");
   res.redirect("/admin/chambres?success=Chambre+supprimée");
@@ -874,7 +905,7 @@ app.post("/admin/chambres/delete/:id", requireAdmin, async (req, res) => {
 
 // ─── ADMIN RESERVATIONS ───────────────────────────────────────────────────────
 
-app.get("/admin/reservations", requireAdmin, async (_req, res) => {
+app.get("/admin/reservations", requireAuth, async (_req, res) => {
   const [bookings, settings] = await Promise.all([
     prisma.booking.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.setting.findUnique({ where: { id: "main" } }),
@@ -882,7 +913,7 @@ app.get("/admin/reservations", requireAdmin, async (_req, res) => {
   res.render("admin/bookings", { bookings, settings });
 });
 
-app.post("/admin/reservations/status/:id", requireAdmin, async (req, res) => {
+app.post("/admin/reservations/status/:id", requireAuth, async (req, res) => {
   await prisma.booking.update({
     where: { id: req.params.id },
     data: { status: req.body.status },
@@ -890,14 +921,14 @@ app.post("/admin/reservations/status/:id", requireAdmin, async (req, res) => {
   res.redirect("/admin/reservations");
 });
 
-app.post("/admin/reservations/delete/:id", requireAdmin, async (req, res) => {
+app.post("/admin/reservations/delete/:id", requireAuth, async (req, res) => {
   await prisma.booking.delete({ where: { id: req.params.id } });
   res.redirect("/admin/reservations");
 });
 
 // ─── ADMIN PARAMETRES ─────────────────────────────────────────────────────────
 
-app.get("/admin/parametres", requireAdmin, async (req, res) => {
+app.get("/admin/parametres", requireAuth, async (req, res) => {
   const settings = await prisma.setting.findUnique({ where: { id: "main" } });
   res.render("admin/settings", {
     settings,
@@ -905,49 +936,38 @@ app.get("/admin/parametres", requireAdmin, async (req, res) => {
   });
 });
 
-app.post("/admin/parametres", requireAdmin, async (req, res) => {
-  const {
-    siteName,
-    tagline,
-    description,
-    address,
-    phone,
-    email,
-    aboutText,
-    aboutText2,
-    heroImage,
-    adminPlain,
-  } = req.body;
-  const data = {
-    siteName,
-    tagline,
-    description,
-    address,
-    phone,
-    email,
-    aboutText,
-    aboutText2,
-    heroImage,
-  };
-  if (adminPlain?.trim()) data.adminPlain = adminPlain.trim();
+app.post("/admin/parametres", requireAuth, requireRole("superadmin", "editor"), async (req, res) => {
+  const { tagline, description, aboutText, aboutText2, heroImage, siteName, address, phone, email, adminPlain } = req.body;
+  const role = req.session.user.role;
+  // Champs accessibles à tous (editor + superadmin)
+  const data = { tagline, description, aboutText, aboutText2, heroImage };
+  // Champs réservés au superadmin
+  if (role === "superadmin") {
+    if (siteName) data.siteName = siteName;
+    if (address !== undefined) data.address = address;
+    if (phone !== undefined) data.phone = phone;
+    if (email !== undefined) data.email = email;
+    if (adminPlain?.trim()) data.adminPlain = adminPlain.trim();
+  }
   await prisma.setting.update({ where: { id: "main" }, data });
   cacheInvalidate("settings");
+  logActivity(req, "SETTINGS_SAVED");
   res.redirect("/admin/parametres?success=1");
 });
 
 // ─── MESSAGES DE CONTACT ─────────────────────────────────────────────────────
-app.get("/admin/messages", requireAdmin, async (req, res) => {
+app.get("/admin/messages", requireAuth, async (req, res) => {
   const settings = await prisma.setting.findUnique({ where: { id: "main" } });
   const messages = await prisma.contactMessage.findMany({ orderBy: { createdAt: "desc" } });
   res.render("admin/messages", { settings, messages });
 });
 
-app.post("/admin/messages/:id/read", requireAdmin, async (req, res) => {
+app.post("/admin/messages/:id/read", requireAuth, async (req, res) => {
   await prisma.contactMessage.update({ where: { id: req.params.id }, data: { read: true } });
   res.redirect("/admin/messages");
 });
 
-app.post("/admin/messages/:id/delete", requireAdmin, async (req, res) => {
+app.post("/admin/messages/:id/delete", requireAuth, async (req, res) => {
   await prisma.contactMessage.delete({ where: { id: req.params.id } });
   res.redirect("/admin/messages");
 });
@@ -955,12 +975,12 @@ app.post("/admin/messages/:id/delete", requireAdmin, async (req, res) => {
 // ─── MÉDIATHÈQUE ─────────────────────────────────────────────────────────────
 const IMAGE_EXTS = /\.(jpg|jpeg|png|webp|gif)$/i;
 
-app.get("/admin/media", requireAdmin, async (_req, res) => {
+app.get("/admin/media", requireAuth, async (_req, res) => {
   const settings = await prisma.setting.findUnique({ where: { id: "main" } });
   res.render("admin/media", { settings });
 });
 
-app.get("/admin/media/list", requireAdmin, async (_req, res) => {
+app.get("/admin/media/list", requireAuth, async (_req, res) => {
   const imageDir = path.join(__dirname, "public/image");
   const files = fs.readdirSync(imageDir).filter((f) => IMAGE_EXTS.test(f));
   const rooms = await prisma.room.findMany({ select: { images: true } });
@@ -974,13 +994,13 @@ app.get("/admin/media/list", requireAdmin, async (_req, res) => {
   res.json(list);
 });
 
-app.post("/admin/media/upload", requireAdmin, uploadImages.array("images", 30), async (req, res) => {
+app.post("/admin/media/upload", requireAuth, uploadImages.array("images", 30), async (req, res) => {
   const files = req.files || [];
   await Promise.all(files.map((f) => compressImage(path.join(__dirname, "public/image", f.filename))));
   res.json({ files: files.map((f) => ({ filename: f.filename, url: `/image/${encodeURIComponent(f.filename)}` })) });
 });
 
-app.post("/admin/media/delete", requireAdmin, async (req, res) => {
+app.post("/admin/media/delete", requireAuth, async (req, res) => {
   const { filename } = req.body;
   if (!filename || !filename.startsWith("room-")) return res.status(400).json({ error: "Fichier non supprimable" });
   const filePath = path.join(__dirname, "public/image", filename);
@@ -989,7 +1009,7 @@ app.post("/admin/media/delete", requireAdmin, async (req, res) => {
 });
 
 // Ajouter des images depuis la médiathèque à une chambre
-app.post("/admin/chambres/:id/images/from-library", requireAdmin, async (req, res) => {
+app.post("/admin/chambres/:id/images/from-library", requireAuth, async (req, res) => {
   const room = await prisma.room.findUnique({ where: { id: req.params.id } });
   if (!room) return res.status(404).json({ error: "Chambre introuvable" });
   const filenames = Array.isArray(req.body.filenames) ? req.body.filenames : [req.body.filenames].filter(Boolean);
@@ -1001,13 +1021,190 @@ app.post("/admin/chambres/:id/images/from-library", requireAdmin, async (req, re
   res.json({ success: true });
 });
 
-// ─── START ────────────────────────────────────────────────────────────────────
-// app.listen(PORT, () => {
-//   console.log(`\n✅ Maison Stella → http://localhost:${PORT}`);
-//   console.log(`🔐 Admin panel  → http://localhost:${PORT}/admin`);
-//   console.log(`   Mot de passe: stella2026\n`);
-// });
+// ─── GESTION UTILISATEURS ────────────────────────────────────────────────────
+app.get("/admin/utilisateurs", requireAuth, requireRole("superadmin"), async (_req, res) => {
+  const users = await prisma.adminUser.findMany({ orderBy: { createdAt: "asc" } });
+  res.render("admin/users", { users, settings: res.locals.settings });
+});
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on ${BASE_URL}`);
+app.get("/admin/utilisateurs/nouveau", requireAuth, requireRole("superadmin"), (_req, res) => {
+  res.render("admin/user-create", { error: null, settings: res.locals.settings });
+});
+
+app.post("/admin/utilisateurs/nouveau", requireAuth, requireRole("superadmin"), async (req, res) => {
+  const { name, email, password, role } = req.body;
+  if (!name || !email || !password || !role) {
+    return res.render("admin/user-create", { error: "Tous les champs sont requis.", settings: res.locals.settings });
+  }
+  const exists = await prisma.adminUser.findUnique({ where: { email: email.toLowerCase().trim() } });
+  if (exists) return res.render("admin/user-create", { error: "Cet e-mail est déjà utilisé.", settings: res.locals.settings });
+  const passwordHash = await bcrypt.hash(password, 12);
+  await prisma.adminUser.create({ data: { name, email: email.toLowerCase().trim(), passwordHash, role } });
+  logActivity(req, "USER_CREATED", { name, email, role });
+  res.redirect("/admin/utilisateurs?success=Utilisateur+créé");
+});
+
+app.get("/admin/utilisateurs/edit/:id", requireAuth, requireRole("superadmin"), async (req, res) => {
+  const user = await prisma.adminUser.findUnique({ where: { id: req.params.id } });
+  if (!user) return res.redirect("/admin/utilisateurs");
+  res.render("admin/user-edit", { user, error: null, success: null, settings: res.locals.settings });
+});
+
+app.post("/admin/utilisateurs/update/:id", requireAuth, requireRole("superadmin"), async (req, res) => {
+  const { name, email, password, role } = req.body;
+  const data = { name, email: email.toLowerCase().trim(), role };
+  if (password?.trim()) data.passwordHash = await bcrypt.hash(password.trim(), 12);
+  await prisma.adminUser.update({ where: { id: req.params.id }, data });
+  logActivity(req, "USER_UPDATED", { id: req.params.id, name, role });
+  res.redirect(`/admin/utilisateurs/edit/${req.params.id}?success=1`);
+});
+
+app.post("/admin/utilisateurs/toggle/:id", requireAuth, requireRole("superadmin"), async (req, res) => {
+  const user = await prisma.adminUser.findUnique({ where: { id: req.params.id } });
+  if (!user) return res.redirect("/admin/utilisateurs");
+  if (user.id === req.session.user.id) return res.redirect("/admin/utilisateurs"); // ne pas se désactiver soi-même
+  await prisma.adminUser.update({ where: { id: req.params.id }, data: { active: !user.active } });
+  res.redirect("/admin/utilisateurs");
+});
+
+app.post("/admin/utilisateurs/delete/:id", requireAuth, requireRole("superadmin"), async (req, res) => {
+  if (req.params.id === req.session.user.id) return res.redirect("/admin/utilisateurs"); // ne pas se supprimer soi-même
+  const superAdminCount = await prisma.adminUser.count({ where: { role: "superadmin", active: true } });
+  const target = await prisma.adminUser.findUnique({ where: { id: req.params.id } });
+  if (target?.role === "superadmin" && superAdminCount <= 1) return res.redirect("/admin/utilisateurs?error=Impossible+de+supprimer+le+dernier+superadmin");
+  await prisma.adminUser.delete({ where: { id: req.params.id } });
+  logActivity(req, "USER_DELETED", { id: req.params.id });
+  res.redirect("/admin/utilisateurs");
+});
+
+// ─── BLOG ADMIN ───────────────────────────────────────────────────────────────
+app.get("/admin/blog", requireAuth, async (req, res) => {
+  const role = req.session.user.role;
+  const where = role === "writer" ? { authorId: req.session.user.id } : {};
+  const posts = await prisma.blogPost.findMany({ where, orderBy: { createdAt: "desc" } });
+  const success = req.query.success || null;
+  res.render("admin/blog-list", { posts, success, settings: res.locals.settings });
+});
+
+app.get("/admin/blog/nouveau", requireAuth, (_req, res) => {
+  res.render("admin/blog-edit", { post: null, error: null, settings: res.locals.settings });
+});
+
+app.post("/admin/blog/nouveau", requireAuth, async (req, res) => {
+  const { title, excerpt, content, coverImage, status, tags } = req.body;
+  if (!title || !content) return res.render("admin/blog-edit", { post: null, error: "Titre et contenu requis.", settings: res.locals.settings });
+  let slug = slugify(title);
+  const existing = await prisma.blogPost.findUnique({ where: { slug } });
+  if (existing) slug = `${slug}-${Date.now().toString(36)}`;
+  const tagsArr = tags ? tags.split(",").map(t => t.trim()).filter(Boolean) : [];
+  const data = {
+    title, slug, excerpt: excerpt || "", content, coverImage: coverImage || "",
+    authorId: req.session.user.id, authorName: req.session.user.name,
+    status: status || "draft",
+    tags: tagsArr,
+    publishedAt: status === "published" ? new Date() : null,
+  };
+  const post = await prisma.blogPost.create({ data });
+  logActivity(req, status === "published" ? "BLOG_PUBLISHED" : "BLOG_CREATED", { id: post.id, title });
+  res.redirect(`/admin/blog/edit/${post.id}?success=Article+créé`);
+});
+
+app.get("/admin/blog/edit/:id", requireAuth, async (req, res) => {
+  const post = await prisma.blogPost.findUnique({ where: { id: req.params.id } });
+  if (!post) return res.redirect("/admin/blog");
+  if (req.session.user.role === "writer" && post.authorId !== req.session.user.id)
+    return res.status(403).render("admin/403", { settings: res.locals.settings, currentUser: req.session.user });
+  const success = req.query.success || null;
+  res.render("admin/blog-edit", { post, error: null, success, settings: res.locals.settings });
+});
+
+app.post("/admin/blog/update/:id", requireAuth, async (req, res) => {
+  const post = await prisma.blogPost.findUnique({ where: { id: req.params.id } });
+  if (!post) return res.redirect("/admin/blog");
+  if (req.session.user.role === "writer" && post.authorId !== req.session.user.id)
+    return res.status(403).render("admin/403", { settings: res.locals.settings, currentUser: req.session.user });
+  const { title, excerpt, content, coverImage, status, tags } = req.body;
+  const tagsArr = tags ? tags.split(",").map(t => t.trim()).filter(Boolean) : [];
+  const wasPublished = post.status !== "published" && status === "published";
+  await prisma.blogPost.update({
+    where: { id: req.params.id },
+    data: {
+      title, excerpt: excerpt || "", content, coverImage: coverImage || "",
+      status: status || "draft", tags: tagsArr,
+      publishedAt: wasPublished ? new Date() : post.publishedAt,
+    },
+  });
+  logActivity(req, wasPublished ? "BLOG_PUBLISHED" : "BLOG_UPDATED", { id: req.params.id, title });
+  res.redirect(`/admin/blog/edit/${req.params.id}?success=Article+enregistré`);
+});
+
+app.post("/admin/blog/delete/:id", requireAuth, async (req, res) => {
+  const post = await prisma.blogPost.findUnique({ where: { id: req.params.id } });
+  if (!post) return res.redirect("/admin/blog");
+  if (req.session.user.role === "writer" && post.authorId !== req.session.user.id)
+    return res.redirect("/admin/blog");
+  await prisma.blogPost.delete({ where: { id: req.params.id } });
+  logActivity(req, "BLOG_DELETED", { id: req.params.id, title: post.title });
+  res.redirect("/admin/blog?success=Article+supprimé");
+});
+
+// ─── JOURNAUX D'ACTIVITÉ ──────────────────────────────────────────────────────
+app.get("/admin/logs", requireAuth, requireRole("superadmin"), async (req, res) => {
+  const { action, userId, from, to } = req.query;
+  const where = {};
+  if (action) where.action = action;
+  if (userId) where.userId = userId;
+  if (from || to) {
+    where.createdAt = {};
+    if (from) where.createdAt.gte = new Date(from);
+    if (to) where.createdAt.lte = new Date(to + "T23:59:59");
+  }
+  const [logs, users] = await Promise.all([
+    prisma.activityLog.findMany({ where, orderBy: { createdAt: "desc" }, take: 200 }),
+    prisma.adminUser.findMany({ select: { id: true, name: true } }),
+  ]);
+  res.render("admin/logs", { logs, users, filters: req.query, settings: res.locals.settings });
+});
+
+// ─── BLOG PUBLIC ─────────────────────────────────────────────────────────────
+app.get("/blog", async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const take = 10;
+  const [posts, total] = await Promise.all([
+    prisma.blogPost.findMany({ where: { status: "published" }, orderBy: { publishedAt: "desc" }, skip: (page - 1) * take, take }),
+    prisma.blogPost.count({ where: { status: "published" } }),
+  ]);
+  const settings = await prisma.setting.findUnique({ where: { id: "main" } });
+  res.render("blog/index", { posts, page, totalPages: Math.ceil(total / take), settings, canonical: BASE_URL + "/blog" });
+});
+
+app.get("/blog/:slug", async (req, res) => {
+  const post = await prisma.blogPost.findUnique({ where: { slug: req.params.slug } });
+  if (!post || post.status !== "published") return res.status(404).redirect("/blog");
+  const settings = await prisma.setting.findUnique({ where: { id: "main" } });
+  res.render("blog/post", { post, settings, canonical: `${BASE_URL}/blog/${post.slug}` });
+});
+
+// ─── MIGRATION : premier superadmin ──────────────────────────────────────────
+async function migrateAdminUser() {
+  try {
+    const count = await prisma.adminUser.count();
+    if (count > 0) return;
+    const settings = await prisma.setting.findUnique({ where: { id: "main" } });
+    const plain = settings?.adminPlain || "stella2026";
+    const passwordHash = await bcrypt.hash(plain, 12);
+    await prisma.adminUser.create({
+      data: { name: "Super Admin", email: "admin@maisonstella.tg", passwordHash, role: "superadmin" },
+    });
+    console.log(`Migration: superadmin créé — email: admin@maisonstella.tg / mdp: ${plain}`);
+  } catch (e) {
+    console.error("Migration error:", e.message);
+  }
+}
+
+// ─── START ────────────────────────────────────────────────────────────────────
+migrateAdminUser().then(() => {
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on ${BASE_URL}`);
+  });
 });

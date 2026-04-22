@@ -20,8 +20,12 @@
     <% } %>
     <form method="POST" action="/admin/login" class="login-form">
       <div class="field">
+        <label>Adresse e-mail</label>
+        <input type="email" name="email" placeholder="admin@maisonstella.tg" required autofocus>
+      </div>
+      <div class="field">
         <label>Mot de passe</label>
-        <input type="password" name="password" placeholder="••••••••" required autofocus>
+        <input type="password" name="password" placeholder="••••••••" required>
       </div>
       <button type="submit" class="btn-admin-primary btn-full">Se connecter</button>
     </form>

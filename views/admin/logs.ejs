@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Journal d'activité</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="icon" href="/image/logo.png" type="image/png">
+  <style>
+    .log-filters { display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .log-filters input, .log-filters select { padding:0.45rem 0.75rem; border:1px solid var(--border); border-radius:var(--radius); font-size:0.85rem; background:#fff; color:var(--text); min-width:0; }
+    .log-filters button { padding:0.45rem 1rem; border-radius:var(--radius); font-size:0.85rem; font-weight:600; background:var(--primary); color:#fff; border:none; cursor:pointer; }
+    .log-filters a { padding:0.45rem 0.9rem; border-radius:var(--radius); font-size:0.85rem; font-weight:500; border:1px solid var(--border); color:var(--text); text-decoration:none; background:#fff; }
+    .log-table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+    .log-table th { text-align:left; padding:0.65rem 0.75rem; background:var(--bg-gray); border-bottom:2px solid var(--border); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); font-weight:600; }
+    .log-table td { padding:0.65rem 0.75rem; border-bottom:1px solid var(--border); vertical-align:top; }
+    .log-table tr:last-child td { border-bottom:none; }
+    .log-table tr:hover td { background:var(--bg-gray); }
+    .action-badge { display:inline-block; font-size:0.7rem; font-weight:700; letter-spacing:0.05em; padding:0.2rem 0.55rem; border-radius:6px; text-transform:uppercase; }
+    .action-LOGIN    { background:#f0fdf4; color:#166534; }
+    .action-LOGOUT   { background:#f8fafc; color:#64748b; }
+    .action-BLOG_CREATED   { background:#eff6ff; color:#1d4ed8; }
+    .action-BLOG_UPDATED   { background:#fef9c3; color:#854d0e; }
+    .action-BLOG_PUBLISHED { background:#f0fdf4; color:#166534; }
+    .action-BLOG_DELETED   { background:#fef2f2; color:#991b1b; }
+    .action-USER_CREATED   { background:#fdf4ff; color:#6b21a8; }
+    .action-USER_UPDATED   { background:#fff7ed; color:#9a3412; }
+    .action-USER_DELETED   { background:#fef2f2; color:#991b1b; }
+    .action-ROOM_CREATED   { background:#eff6ff; color:#1d4ed8; }
+    .action-ROOM_UPDATED   { background:#fef9c3; color:#854d0e; }
+    .action-ROOM_DELETED   { background:#fef2f2; color:#991b1b; }
+    .action-SETTINGS_SAVED { background:#f0fdf4; color:#166534; }
+    .action-default  { background:#f1f5f9; color:#334155; }
+    .log-details { font-size:0.78rem; color:var(--muted); margin-top:0.2rem; font-family:monospace; word-break:break-all; }
+    .log-ip { font-size:0.75rem; color:var(--muted); font-family:monospace; }
+    .log-time { white-space:nowrap; color:var(--muted); font-size:0.8rem; }
+    .log-count { font-size:0.82rem; color:var(--muted); margin-bottom:1rem; }
+  </style>
+</head>
+<body class="admin-body">
+
+<%- include('sidebar', { activePage: 'logs', settings }) %>
+
+<main class="admin-main">
+  <div class="admin-topbar">
+    <h1 class="admin-page-title">Journal d'activité</h1>
+    <span style="font-size:0.82rem;color:var(--muted);"><%= logs.length %> entrée<%= logs.length !== 1 ? 's' : '' %></span>
+  </div>
+  <div class="admin-content">
+
+    <!-- Filtres -->
+    <form method="GET" action="/admin/logs" class="log-filters">
+      <select name="action">
+        <option value="">Toutes les actions</option>
+        <% const actions = ['LOGIN','LOGOUT','BLOG_CREATED','BLOG_UPDATED','BLOG_PUBLISHED','BLOG_DELETED',
+           'USER_CREATED','USER_UPDATED','USER_DELETED','ROOM_CREATED','ROOM_UPDATED','ROOM_DELETED','SETTINGS_SAVED']; %>
+        <% actions.forEach(a => { %>
+        <option value="<%= a %>" <%= filters.action === a ? 'selected' : '' %>><%= a %></option>
+        <% }) %>
+      </select>
+      <select name="userId">
+        <option value="">Tous les utilisateurs</option>
+        <% users.forEach(u => { %>
+        <option value="<%= u.id %>" <%= filters.userId === u.id ? 'selected' : '' %>><%= u.name %></option>
+        <% }) %>
+      </select>
+      <input type="date" name="from" value="<%= filters.from || '' %>" title="Depuis">
+      <input type="date" name="to" value="<%= filters.to || '' %>" title="Jusqu'au">
+      <button type="submit">Filtrer</button>
+      <a href="/admin/logs">Réinitialiser</a>
+    </form>
+
+    <% if (logs.length === 0) { %>
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <p>Aucun journal pour ces filtres.</p>
+    </div>
+    <% } else { %>
+    <div class="table-wrap">
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>Utilisateur</th>
+            <th>Action</th>
+            <th>Détails</th>
+            <th>IP</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% logs.forEach(log => { %>
+          <%
+            const badgeClass = [
+              'LOGIN','LOGOUT','BLOG_CREATED','BLOG_UPDATED','BLOG_PUBLISHED','BLOG_DELETED',
+              'USER_CREATED','USER_UPDATED','USER_DELETED','ROOM_CREATED','ROOM_UPDATED','ROOM_DELETED','SETTINGS_SAVED'
+            ].includes(log.action) ? 'action-' + log.action : 'action-default';
+          %>
+          <tr>
+            <td>
+              <span style="font-weight:600;color:var(--dark)"><%= log.userName %></span>
+            </td>
+            <td>
+              <span class="action-badge <%= badgeClass %>"><%= log.action %></span>
+            </td>
+            <td>
+              <% if (log.details) { %>
+              <% const d = typeof log.details === 'string' ? JSON.parse(log.details) : log.details; %>
+              <% const keys = Object.keys(d); %>
+              <% if (keys.length) { %>
+              <div class="log-details">
+                <% keys.forEach(k => { %><span style="color:var(--dark)"><%= k %></span>: <%= d[k] %>  <% }) %>
+              </div>
+              <% } %>
+              <% } %>
+            </td>
+            <td><span class="log-ip"><%= log.ip || '—' %></span></td>
+            <td class="log-time">
+              <%= new Date(log.createdAt).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' }) %>
+              <br>
+              <span style="font-size:0.72rem;"><%= new Date(log.createdAt).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' }) %></span>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+
+  </div>
+</main>
+<script src="/js/admin.js"></script>
+</body>
+</html>

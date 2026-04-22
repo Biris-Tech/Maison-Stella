@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – <%= post ? 'Modifier' : 'Nouvel article' %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="icon" href="/image/logo.png" type="image/png">
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+</head>
+<body class="admin-body">
+
+<%- include('sidebar', { activePage: 'blog', settings }) %>
+
+<main class="admin-main">
+  <div class="admin-topbar">
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <a href="/admin/blog" class="topbar-back">← Blog</a>
+      <span class="topbar-sep">/</span>
+      <h1 class="admin-page-title"><%= post ? post.title : 'Nouvel article' %></h1>
+    </div>
+    <% if (post && post.status === 'published') { %>
+    <a href="/blog/<%= post.slug %>" target="_blank" class="btn-admin-outline btn-sm">Voir l'article →</a>
+    <% } %>
+  </div>
+  <div class="admin-content">
+
+    <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+    <% if (typeof success !== 'undefined' && success) { %><div class="alert alert-success"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:0.4rem"><polyline points="20 6 9 17 4 12"/></svg> <%= success %></div><% } %>
+
+    <form method="POST" action="<%= post ? '/admin/blog/update/' + post.id : '/admin/blog/nouveau' %>" id="blogForm" class="settings-form">
+      <input type="hidden" name="content" id="contentInput">
+
+      <div class="edit-page-grid">
+
+        <!-- Colonne principale -->
+        <div>
+          <div class="settings-card">
+            <h2 class="settings-section-title">Contenu</h2>
+            <div class="field" style="margin-bottom:1rem;">
+              <label>Titre *</label>
+              <input type="text" name="title" value="<%= post ? post.title : '' %>" placeholder="Titre de l'article" required>
+            </div>
+            <div class="field" style="margin-bottom:1rem;">
+              <label>Résumé (affiché sur la liste)</label>
+              <textarea name="excerpt" rows="2" placeholder="Une courte description de l'article…"><%= post ? post.excerpt : '' %></textarea>
+            </div>
+            <div class="field">
+              <label>Contenu *</label>
+              <div id="editor" style="border:1px solid var(--border);border-radius:var(--radius);background:#fff;"><%- post ? post.content : '' %></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne droite -->
+        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+          <div class="settings-card">
+            <h2 class="settings-section-title">Publication</h2>
+            <div class="field" style="margin-bottom:1rem;">
+              <label>Statut</label>
+              <select name="status">
+                <option value="draft" <%= !post || post.status === 'draft' ? 'selected' : '' %>>Brouillon</option>
+                <option value="published" <%= post && post.status === 'published' ? 'selected' : '' %>>Publié</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Tags (séparés par des virgules)</label>
+              <input type="text" name="tags" value="<%= post && post.tags ? post.tags.join(', ') : '' %>" placeholder="ex: voyage, Lomé, luxe">
+            </div>
+            <div class="form-actions" style="margin-top:1.25rem;">
+              <button type="submit" class="btn-admin-primary btn-full">Enregistrer</button>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h2 class="settings-section-title">Image de couverture</h2>
+            <div class="field">
+              <label>Nom de fichier (depuis la médiathèque)</label>
+              <input type="text" name="coverImage" id="coverImageInput" value="<%= post ? post.coverImage : '' %>" placeholder="ex: photo-blog.jpg">
+              <% if (post && post.coverImage) { %>
+              <img src="/image/<%= encodeURIComponent(post.coverImage) %>" alt="" class="blog-cover-preview" id="coverPreview">
+              <% } else { %>
+              <img src="" alt="" class="blog-cover-preview" id="coverPreview" style="display:none;">
+              <% } %>
+            </div>
+            <button type="button" class="btn-admin-ghost btn-sm" style="margin-top:0.5rem;" onclick="openMediaPicker()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:0.25rem"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              Choisir depuis la médiathèque
+            </button>
+          </div>
+
+          <% if (post) { %>
+          <div class="settings-card">
+            <h2 class="settings-section-title">Partager</h2>
+            <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.75rem;">Lien public de l'article :</p>
+            <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+              <input type="text" value="<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>/blog/<%= post.slug %>"
+                readonly style="flex:1;min-width:0;font-size:0.78rem;background:var(--bg);" id="shareUrl">
+              <button type="button" class="btn-admin-outline btn-sm" onclick="copyShareUrl()">Copier</button>
+            </div>
+          </div>
+          <% } %>
+
+        </div>
+      </div>
+    </form>
+
+  </div>
+</main>
+
+<!-- Modal médiathèque -->
+<div class="modal-backdrop" id="mediaPickerModal" style="display:none;" onclick="closeMediaPicker(event)">
+  <div class="modal-box" style="max-width:700px;" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Choisir une image de couverture</h3>
+      <button class="modal-close" onclick="closeMediaPicker()">✕</button>
+    </div>
+    <input type="text" placeholder="Rechercher…" class="media-search-input" style="width:100%;margin-bottom:1rem;" oninput="filterMediaPicker(this.value)">
+    <div class="library-modal-grid" id="mediaPickerGrid">Chargement…</div>
+    <div class="modal-actions">
+      <button class="btn-admin-outline" onclick="closeMediaPicker()">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script>
+  const quill = new Quill('#editor', {
+    theme: 'snow',
+    modules: {
+      toolbar: [
+        [{ header: [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['blockquote', 'code-block'],
+        ['link', 'image'],
+        ['clean']
+      ]
+    }
+  });
+
+  document.getElementById('blogForm').addEventListener('submit', function() {
+    document.getElementById('contentInput').value = quill.root.innerHTML;
+  });
+
+  // Prévisualisation image de couverture
+  document.getElementById('coverImageInput').addEventListener('input', function() {
+    const preview = document.getElementById('coverPreview');
+    if (this.value) {
+      preview.src = '/image/' + encodeURIComponent(this.value);
+      preview.style.display = 'block';
+    } else {
+      preview.style.display = 'none';
+    }
+  });
+
+  // Copier l'URL
+  function copyShareUrl() {
+    navigator.clipboard.writeText(document.getElementById('shareUrl').value)
+      .then(() => alert('Lien copié !'));
+  }
+
+  // Médiathèque
+  let allMediaImages = [];
+  async function openMediaPicker() {
+    document.getElementById('mediaPickerModal').style.display = 'flex';
+    if (!allMediaImages.length) {
+      const resp = await fetch('/admin/media/list');
+      allMediaImages = await resp.json();
+    }
+    renderMediaPicker(allMediaImages);
+  }
+  function closeMediaPicker(e) {
+    if (!e || e.target === document.getElementById('mediaPickerModal'))
+      document.getElementById('mediaPickerModal').style.display = 'none';
+  }
+  function filterMediaPicker(q) {
+    const filtered = q ? allMediaImages.filter(i => i.filename.toLowerCase().includes(q.toLowerCase())) : allMediaImages;
+    renderMediaPicker(filtered);
+  }
+  function renderMediaPicker(items) {
+    const grid = document.getElementById('mediaPickerGrid');
+    if (!items.length) { grid.innerHTML = '<p style="color:var(--muted);padding:1rem;">Aucune image.</p>'; return; }
+    grid.innerHTML = items.map(item => `
+      <div class="library-modal-item" onclick="selectCoverImage('${item.filename}')">
+        <img src="${item.url}" alt="" loading="lazy" decoding="async">
+        <div class="lib-check">✓</div>
+      </div>
+    `).join('');
+  }
+  function selectCoverImage(filename) {
+    document.getElementById('coverImageInput').value = filename;
+    const preview = document.getElementById('coverPreview');
+    preview.src = '/image/' + encodeURIComponent(filename);
+    preview.style.display = 'block';
+    closeMediaPicker();
+  }
+</script>
+</body>
+</html>

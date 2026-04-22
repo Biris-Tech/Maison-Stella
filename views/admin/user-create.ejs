@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Nouvel utilisateur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="icon" href="/image/logo.png" type="image/png">
+</head>
+<body class="admin-body">
+
+<%- include('sidebar', { activePage: 'users', settings }) %>
+
+<main class="admin-main">
+  <div class="admin-topbar">
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <a href="/admin/utilisateurs" class="topbar-back">← Utilisateurs</a>
+      <span class="topbar-sep">/</span>
+      <h1 class="admin-page-title">Nouvel utilisateur</h1>
+    </div>
+  </div>
+  <div class="admin-content">
+
+    <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+    <form method="POST" action="/admin/utilisateurs/nouveau" class="settings-form">
+      <div class="settings-card">
+        <h2 class="settings-section-title">Informations</h2>
+        <div class="settings-grid">
+          <div class="field">
+            <label>Nom complet *</label>
+            <input type="text" name="name" placeholder="ex: Marie Dupont" required>
+          </div>
+          <div class="field">
+            <label>Adresse e-mail *</label>
+            <input type="email" name="email" placeholder="marie@maisonstella.tg" required>
+          </div>
+          <div class="field">
+            <label>Mot de passe *</label>
+            <input type="password" name="password" placeholder="Minimum 8 caractères" required>
+          </div>
+          <div class="field">
+            <label>Rôle *</label>
+            <select name="role" required>
+              <option value="writer">Rédacteur — blog uniquement</option>
+              <option value="editor">Éditeur — blog + contenu accueil</option>
+              <option value="superadmin">Super Admin — accès complet</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-admin-primary btn-lg">Créer l'utilisateur</button>
+        <a href="/admin/utilisateurs" class="btn-admin-outline btn-lg">Annuler</a>
+      </div>
+    </form>
+
+  </div>
+</main>
+<script src="/js/admin.js"></script>
+</body>
+</html>

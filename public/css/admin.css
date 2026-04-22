@@ -57,6 +57,11 @@ img { display: block; max-width: 100%; }
 .sidebar-visit:hover { color: #fff; background: rgba(255,255,255,0.07); }
 .sidebar-logout:hover { color: #fff; background: rgba(255,56,92,0.15); }
 .sidebar-badge { display: inline-flex; align-items: center; justify-content: center; background: #ef4444; color: #fff; font-size: 0.65rem; font-weight: 700; min-width: 18px; height: 18px; border-radius: 100px; padding: 0 4px; margin-left: auto; }
+.sidebar-user { padding: 0.75rem 0.9rem 0.25rem; border-top: 1px solid rgba(255,255,255,0.08); margin-bottom: 0.25rem; }
+.sidebar-user-name { font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,0.85); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-user-role { font-size: 0.68rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.07em; }
+.ql-editor { min-height: 320px; font-size: 1rem; }
+.blog-cover-preview { width: 160px; height: 100px; object-fit: cover; border-radius: 8px; margin-top: 0.5rem; display: block; }
 
 /* MAIN */
 .admin-main { flex: 1; margin-left: var(--sidebar-w); min-height: 100vh; display: flex; flex-direction: column; }
