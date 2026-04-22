@@ -51,6 +51,44 @@ model ContactMessage {
   createdAt DateTime @default(now())
 }
 
+model AdminUser {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  passwordHash String
+  role         String        @default("writer")
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  logs         ActivityLog[]
+}
+
+model BlogPost {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  excerpt     String    @db.Text
+  content     String    @db.LongText
+  coverImage  String    @default("")
+  authorId    String
+  authorName  String
+  status      String    @default("draft")
+  tags        Json      @default("[]")
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model ActivityLog {
+  id        String    @id @default(cuid())
+  userId    String
+  userName  String
+  action    String
+  details   Json?
+  ip        String    @default("")
+  createdAt DateTime  @default(now())
+  user      AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model Setting {
   id          String @id
   siteName    String
