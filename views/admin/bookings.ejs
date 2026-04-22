@@ -34,6 +34,7 @@
             <th>Arrivée</th>
             <th>Départ</th>
             <th>Téléphone</th>
+            <th>Montant</th>
             <th>Date demande</th>
             <th>Statut</th>
             <th>Actions</th>
@@ -51,6 +52,7 @@
               <a href="tel:<%= b.phone.replace(/\s/g,'') %>"><%= b.phone %></a>
               <% } else { %>—<% } %>
             </td>
+            <td><%= b.totalAmount ? b.totalAmount.toLocaleString('fr-FR') + ' FCFA' : '—' %></td>
             <td><%= new Date(b.createdAt).toLocaleDateString('fr-FR') %></td>
             <td>
               <span class="status-badge status-<%= b.status %>">

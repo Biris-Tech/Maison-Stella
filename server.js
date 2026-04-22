@@ -11,12 +11,14 @@ const bcrypt = require("bcryptjs");
 const prisma = require("./lib/prisma");
 
 // ─── EMAIL ────────────────────────────────────────────────────────────────────
-const BOOKING_EMAIL = "maisonstella24@gmail.com";
+const BOOKING_EMAIL = process.env.SMTP_USER || "sav@maisonstellalome.com";
 
 function createMailTransporter() {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return null;
   return nodemailer.createTransport({
-    service: "gmail",
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || "465"),
+    secure: (process.env.SMTP_PORT || "465") === "465",
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
   });
 }
@@ -74,6 +76,62 @@ async function sendBookingNotification(booking) {
     });
   } catch (e) {
     console.error("Email send error:", e.message);
+  }
+}
+
+async function sendClientConfirmation(booking) {
+  if (!booking.email) return;
+  const transporter = createMailTransporter();
+  if (!transporter) return;
+  const methodLabel = booking.paymentMethod === "paypal" ? "PayPal" : "FedaPay (Mobile Money)";
+  const html = `
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><style>
+  body{font-family:-apple-system,sans-serif;background:#f4f4f4;margin:0;padding:0}
+  .wrap{max-width:560px;margin:32px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+  .hdr{background:#2c3e2d;color:#fff;padding:28px 32px}
+  .hdr h1{margin:0 0 4px;font-size:22px}
+  .hdr p{margin:0;opacity:.8;font-size:13px}
+  .body{padding:24px 32px}
+  .row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px}
+  .label{color:#666}
+  .value{font-weight:600;color:#222}
+  .total{display:flex;justify-content:space-between;padding:16px 0 0;font-size:15px}
+  .price{font-weight:700;color:#2c3e2d;font-size:18px}
+  .badge{display:inline-block;margin-top:20px;background:#e8f5e9;color:#2c3e2d;border-radius:20px;padding:6px 16px;font-size:13px;font-weight:600}
+  .ftr{background:#f9f9f9;text-align:center;padding:16px;font-size:12px;color:#999}
+</style></head><body>
+<div class="wrap">
+  <div class="hdr">
+    <h1>Réservation confirmée ✓</h1>
+    <p>Maison Stella · Avepozo, Lomé</p>
+  </div>
+  <div class="body">
+    <p style="font-size:15px;color:#333">Bonjour <strong>${booking.fullname || "Client"}</strong>,<br>Votre réservation a été confirmée. Voici le récapitulatif :</p>
+    <div class="row"><span class="label">Chambre</span><span class="value">${booking.room}</span></div>
+    <div class="row"><span class="label">Arrivée</span><span class="value">${booking.checkin}</span></div>
+    <div class="row"><span class="label">Départ</span><span class="value">${booking.checkout}</span></div>
+    <div class="row"><span class="label">Nuits</span><span class="value">${booking.nights || "—"}</span></div>
+    <div class="row"><span class="label">Voyageurs</span><span class="value">${booking.guests || "—"}</span></div>
+    <div class="row"><span class="label">Mode de paiement</span><span class="value">${methodLabel}</span></div>
+    <div class="total">
+      <span class="label">Montant payé</span>
+      <span class="price">${(booking.totalAmount || 0).toLocaleString("fr-FR")} FCFA</span>
+    </div>
+    <div><span class="badge">Statut : Confirmée</span></div>
+    <p style="font-size:13px;color:#666;margin-top:20px">Pour toute question, contactez-nous à <a href="mailto:${BOOKING_EMAIL}">${BOOKING_EMAIL}</a>.<br>À très bientôt !</p>
+  </div>
+  <div class="ftr">Maison Stella · Avepozo, Lomé — confirmation automatique</div>
+</div>
+</body></html>`;
+  try {
+    await transporter.sendMail({
+      from: `"Maison Stella" <${process.env.SMTP_USER}>`,
+      to: booking.email,
+      subject: `Confirmation de votre réservation – ${booking.room} (${booking.checkin} → ${booking.checkout})`,
+      html,
+    });
+  } catch (e) {
+    console.error("Client email error:", e.message);
   }
 }
 
@@ -914,10 +972,13 @@ app.get("/admin/reservations", requireAuth, async (_req, res) => {
 });
 
 app.post("/admin/reservations/status/:id", requireAuth, async (req, res) => {
-  await prisma.booking.update({
+  const booking = await prisma.booking.update({
     where: { id: req.params.id },
     data: { status: req.body.status },
   });
+  if (req.body.status === "confirmed") {
+    sendClientConfirmation(booking).catch(() => {});
+  }
   res.redirect("/admin/reservations");
 });
 
