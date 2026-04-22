@@ -110,6 +110,7 @@ jobs:
             cd /opt/maison-stella
 
             docker compose down --remove-orphans || true
+            docker builder prune -f
             docker compose up --build -d
 
             docker compose ps
