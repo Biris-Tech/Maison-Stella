@@ -40,7 +40,15 @@
           </div>
           <div class="field">
             <label>Type de lit *</label>
-            <input type="text" name="bedType" placeholder="ex: Lit king size" required>
+            <select name="bedType" required>
+              <option value="Lit simple">Lit simple</option>
+              <option value="Lit double">Lit double</option>
+              <option value="Lit queen" selected>Lit queen</option>
+              <option value="Lit king">Lit king</option>
+              <option value="Lits jumeaux">Lits jumeaux</option>
+              <option value="2 lits doubles">2 lits doubles</option>
+              <option value="Canapé-lit">Canapé-lit</option>
+            </select>
           </div>
           <div class="field">
             <label>Badge (optionnel)</label>
@@ -61,17 +69,25 @@
 
       <div class="settings-card">
         <h2 class="settings-section-title">Équipements & composition</h2>
-        <div class="settings-grid">
-          <div class="field">
-            <label>Composition de la chambre</label>
-            <textarea name="composition" rows="6" placeholder="Lit king size&#10;Salle de bain privative&#10;Coin bureau&#10;Armoire spacieuse"></textarea>
-            <span class="field-hint">Un élément par ligne</span>
+        <div class="field field-full" style="margin-bottom:1.5rem;">
+          <label>Composition de la chambre</label>
+          <div id="compositionWidget">
+            <div class="dyn-list"></div>
+            <button type="button" class="field-add-btn dyn-add">+ Ajouter un élément</button>
           </div>
-          <div class="field">
-            <label>Commodités / Services</label>
-            <textarea name="amenities" rows="6" placeholder="Wi-Fi haut débit&#10;Climatisation&#10;TV écran plat&#10;Service ménage"></textarea>
-            <span class="field-hint">Un élément par ligne</span>
+          <input type="hidden" name="composition" id="compositionHidden" value="">
+        </div>
+        <div class="field field-full">
+          <label>Équipements & services</label>
+          <div id="amenitiesWidget">
+            <div class="amenities-checklist"></div>
+            <div class="chips-box"></div>
+            <div class="custom-add-row">
+              <input type="text" class="custom-input" placeholder="Ajouter un équipement personnalisé…">
+              <button type="button" class="field-add-btn custom-add">Ajouter</button>
+            </div>
           </div>
+          <input type="hidden" name="amenities" id="amenitiesHidden" value="">
         </div>
       </div>
 
@@ -121,6 +137,7 @@
 </div>
 
 <script src="/js/admin.js"></script>
+<script src="/js/admin-fields.js"></script>
 <script>
   const input     = document.getElementById('imagesInput');
   const preview   = document.getElementById('uploadPreview');
@@ -173,6 +190,7 @@
     submitBtn.disabled = true;
     submitBtn.textContent = 'Création en cours…';
 
+    if (window.syncRoomFields) window.syncRoomFields();
     const fd = new FormData(form);
     fd.delete('images');
 
