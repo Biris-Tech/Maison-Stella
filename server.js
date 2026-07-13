@@ -318,6 +318,30 @@ function xofToEur(xof) {
   return Math.ceil((xof / 655.957) * 100) / 100;
 }
 
+// ─── DISPONIBILITÉ (anti-double réservation) ─────────────────────────────────
+// Deux périodes [a, b) et [c, d) se chevauchent ssi a < d ET c < b. Les dates
+// sont des chaînes ISO "YYYY-MM-DD" : la comparaison lexicographique <, >
+// correspond exactement à l'ordre chronologique, pas besoin de parser en Date.
+// Seules les réservations "confirmed" (paiement encaissé) bloquent la chambre :
+// une "pending" correspond à un paiement initié mais jamais confirmé (callback
+// non reçu, paiement abandonné/échoué) et ne doit pas condamner la chambre
+// indéfiniment pour les clients suivants.
+async function isRoomAvailable(roomId, checkin, checkout, excludeBookingId) {
+  // Sans roomId on ne peut pas garantir l'absence de chevauchement (matching
+  // par nom de chambre non fiable) : on refuse prudemment plutôt que de risquer
+  // un doublon.
+  if (!roomId || !checkin || !checkout) return false;
+  const where = {
+    roomId,
+    status: "confirmed",
+    checkin: { lt: checkout },
+    checkout: { gt: checkin },
+  };
+  if (excludeBookingId) where.id = { not: excludeBookingId };
+  const conflict = await prisma.booking.findFirst({ where });
+  return !conflict;
+}
+
 // ─── PUBLIC ROUTES ────────────────────────────────────────────────────────────
 
 app.get("/robots.txt", (_req, res) => {
@@ -409,6 +433,11 @@ app.post("/payment/fedapay/init", async (req, res) => {
     totalAmount,
   } = req.body;
   try {
+    // Rejeter avant tout paiement si la chambre n'est plus disponible sur ces dates.
+    if (!(await isRoomAvailable(roomId, checkin, checkout))) {
+      return res.redirect("/payment/cancel?error=indisponible");
+    }
+
     FedaPay.setApiKey(process.env.FEDAPAY_SECRET_KEY);
     FedaPay.setEnvironment(process.env.FEDAPAY_ENV || "sandbox");
 
@@ -461,6 +490,20 @@ app.get("/payment/fedapay/callback", async (req, res) => {
 
     if (status === "approved" && req.session.pendingBooking) {
       const booking = req.session.pendingBooking;
+      // Anti-collision de dernière minute : revérifier juste avant la création,
+      // au cas où une autre réservation aurait été confirmée entre l'init et ce callback.
+      const available = await isRoomAvailable(booking.roomId, booking.checkin, booking.checkout);
+      if (!available) {
+        // Le paiement FedaPay est déjà approuvé à ce stade (fonds encaissés côté FedaPay) :
+        // cas limite à traiter manuellement, pas de remboursement automatique ici.
+        console.error(
+          `Anti-collision FedaPay: chambre ${booking.roomId} déjà réservée pour ${booking.checkin} → ${booking.checkout} ` +
+          `(transaction FedaPay ${id} approuvée mais réservation NON créée — remboursement/relogement manuel requis).`,
+        );
+        req.session.pendingBooking = null;
+        req.session.fedapayTxId = null;
+        return res.redirect("/payment/cancel?error=indisponible_apres_paiement");
+      }
       await prisma.booking.create({
         data: {
           id: Date.now().toString(),
@@ -485,7 +528,11 @@ app.get("/payment/fedapay/callback", async (req, res) => {
 // PayPal – créer un ordre
 app.post("/payment/paypal/create-order", async (req, res) => {
   try {
-    const { amountEur } = req.body;
+    const { amountEur, roomId, checkin, checkout } = req.body;
+    // Rejeter avant tout paiement si la chambre n'est plus disponible sur ces dates.
+    if (!(await isRoomAvailable(roomId, checkin, checkout))) {
+      return res.status(409).json({ error: "Chambre indisponible sur ces dates" });
+    }
     const token = await getPayPalToken();
     const response = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
       method: "POST",
@@ -541,6 +588,20 @@ app.post("/payment/paypal/capture", async (req, res) => {
     const capture = await response.json();
 
     if (capture.status === "COMPLETED") {
+      // Anti-collision de dernière minute : revérifier juste avant la création,
+      // au cas où une autre réservation aurait été confirmée entre la création
+      // de l'ordre et sa capture.
+      const available = await isRoomAvailable(roomId, checkin, checkout);
+      if (!available) {
+        // Le paiement PayPal est déjà capturé à ce stade (fonds encaissés) : cas
+        // limite à traiter manuellement (remboursement), pas de remboursement
+        // automatique déclenché ici.
+        console.error(
+          `Anti-collision PayPal: chambre ${roomId} déjà réservée pour ${checkin} → ${checkout} ` +
+          `(ordre PayPal ${orderID} capturé mais réservation NON créée — remboursement/relogement manuel requis).`,
+        );
+        return res.status(409).json({ success: false, error: "Chambre indisponible sur ces dates. Paiement capturé — contactez-nous pour un remboursement." });
+      }
       await prisma.booking.create({
         data: {
           id: Date.now().toString(),

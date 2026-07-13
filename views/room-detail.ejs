@@ -432,8 +432,18 @@
         const res = await fetch('/payment/paypal/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amountEur })
+          body: JSON.stringify({
+            amountEur,
+            roomId:   '<%= room.id %>',
+            checkin:  checkinEl.value,
+            checkout: checkoutEl.value
+          })
         });
+        if (res.status === 409) {
+          const err = await res.json();
+          alert(err.error || 'Chambre indisponible sur ces dates.');
+          throw new Error('room-unavailable');
+        }
         const data = await res.json();
         return data.id;
       },
