@@ -322,3 +322,15 @@ html.js .reveal.in { opacity: 1; transform: none; }
 .share-row { display: flex; gap: .7rem; flex-wrap: wrap; }
 .share-row a, .share-row button { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid var(--line); background: transparent; border-radius: 100px; padding: .55rem 1rem; font-family: var(--sans); font-size: .85rem; font-weight: 600; color: var(--ink); cursor: pointer; text-decoration: none; }
 .share-row a:hover, .share-row button:hover { border-color: var(--terracotta); color: var(--terracotta); }
+
+/* ── PAGE RÉSULTAT PAIEMENT ── */
+.result-page { min-height: 72vh; display: flex; align-items: center; justify-content: center; padding: clamp(7rem, 12vw, 9rem) 1.5rem clamp(4rem, 8vw, 6rem); }
+.result-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: clamp(2.5rem, 5vw, 3.5rem) 2.5rem; max-width: 480px; width: 100%; text-align: center; box-shadow: var(--shadow); }
+.result-icon { width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 1.4rem; }
+.result-icon.ok { background: #eaf3ea; color: var(--forest); }
+.result-icon.err { background: #f7ece7; color: var(--terracotta); }
+.result-card h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin-bottom: .8rem; }
+.result-card p { color: var(--ink-soft); line-height: 1.7; margin-bottom: 1.1rem; }
+.result-card a.inline { color: var(--terracotta); font-weight: 600; }
+.result-badge { display: inline-flex; align-items: center; gap: .4rem; background: #eaf3ea; color: var(--forest); font-size: .78rem; font-weight: 600; padding: .35rem .9rem; border-radius: 100px; margin-bottom: 1.3rem; }
+.result-actions { display: flex; gap: .8rem; flex-wrap: wrap; justify-content: center; margin-top: 1.6rem; }
