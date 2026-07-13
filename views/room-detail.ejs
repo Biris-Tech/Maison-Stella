@@ -47,7 +47,7 @@
   <% if (room.images.length > 0) { %>
   <link rel="preload" as="image" href="/image/<%= encodeURIComponent(room.images[0]) %>">
   <% } %>
-  <link rel="stylesheet" href="/css/home.css">
+  <link rel="stylesheet" href="/css/home.css?v=2">
   <link rel="icon" href="/image/logo.png" type="image/png">
   <% if (paypalClientId) { %>
   <script src="https://www.paypal.com/sdk/js?client-id=<%= paypalClientId %>&currency=EUR" defer></script>
