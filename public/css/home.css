@@ -199,3 +199,89 @@ html.js .reveal.in { opacity: 1; transform: none; }
   html.js .reveal { opacity: 1; transform: none; transition: none; }
   * { scroll-behavior: auto; }
 }
+
+/* ── FICHE CHAMBRE ── */
+.detail-wrap { padding-top: clamp(7rem, 12vw, 9rem); padding-bottom: clamp(4rem, 8vw, 7rem); }
+.detail-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.8rem; }
+.detail-top h1 { font-size: clamp(2.2rem, 4.5vw, 3.4rem); margin: .7rem 0 .7rem; }
+.detail-meta { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap; font-size: .9rem; color: var(--ink-soft); }
+.detail-meta .star { color: var(--brass); font-weight: 600; }
+.detail-meta .badge { background: var(--sand); color: var(--ink); font-size: .68rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: .3rem .7rem; border-radius: 100px; }
+.share { display: inline-flex; align-items: center; gap: .5rem; border: 1px solid var(--line); background: transparent; border-radius: 100px; padding: .6rem 1.2rem; font-family: var(--sans); font-size: .85rem; font-weight: 600; cursor: pointer; color: var(--ink); }
+.share:hover { border-color: var(--terracotta); color: var(--terracotta); }
+.gallery { display: grid; grid-template-columns: 2fr 1fr; gap: .8rem; border-radius: 6px; overflow: hidden; margin-bottom: clamp(2.5rem, 5vw, 4rem); }
+.gallery-main-slot { position: relative; cursor: pointer; aspect-ratio: 3/2.2; overflow: hidden; }
+.gallery-main-slot img { width: 100%; height: 100%; object-fit: cover; }
+.gallery-all-btn { position: absolute; bottom: 1rem; right: 1rem; display: inline-flex; align-items: center; gap: .4rem; background: rgba(252,249,243,.94); border: none; border-radius: 100px; padding: .55rem 1rem; font-family: var(--sans); font-size: .8rem; font-weight: 600; cursor: pointer; color: var(--ink); }
+.gallery-side { display: grid; grid-template-rows: 1fr 1fr; gap: .8rem; }
+.gallery-thumb { cursor: pointer; overflow: hidden; }
+.gallery-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
+.gallery-thumb:hover img { transform: scale(1.05); }
+.detail-layout { display: grid; grid-template-columns: 1fr 380px; gap: clamp(2.5rem, 5vw, 4.5rem); align-items: start; }
+.detail-content h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin-bottom: .4rem; }
+.detail-specs { color: var(--ink-soft); }
+.detail-desc { color: var(--ink-soft); font-size: 1.05rem; line-height: 1.7; }
+.detail-block { padding: 2.2rem 0; border-top: 1px solid var(--line); }
+.detail-block h3 { font-size: 1.4rem; margin-bottom: 1.3rem; }
+.feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem 1.5rem; }
+.feature-item { display: flex; gap: .7rem; align-items: center; color: var(--ink); font-size: .95rem; }
+.feature-item svg { color: var(--terracotta); flex-shrink: 0; }
+.reviews { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+.review { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 1.4rem; }
+.review-head { display: flex; align-items: center; gap: .8rem; margin-bottom: .8rem; }
+.review-av { width: 42px; height: 42px; border-radius: 50%; background: var(--sand); color: var(--terracotta); display: grid; place-items: center; font-family: var(--serif); font-size: 1.1rem; }
+.review-head strong { font-family: var(--serif); font-weight: 500; }
+.review-head small { color: var(--ink-soft); font-size: .8rem; }
+.review p { color: var(--ink-soft); font-size: .92rem; line-height: 1.55; }
+.booking-side { position: sticky; top: 100px; display: flex; flex-direction: column; gap: 1rem; }
+.book-card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 1.6rem; box-shadow: var(--shadow); }
+.book-price { display: flex; align-items: baseline; gap: .4rem; }
+.book-price strong { font-family: var(--serif); font-size: 1.9rem; color: var(--ink); }
+.book-price span { color: var(--ink-soft); font-size: .9rem; }
+.book-rating { font-size: .85rem; color: var(--brass); margin: .3rem 0 1.2rem; }
+.book-dates { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.book-dates .bf { padding: .7rem .9rem; }
+.book-dates .bf + .bf { border-left: 1px solid var(--line); }
+.book-field { margin-top: .8rem; border: 1px solid var(--line); border-radius: 8px; padding: .7rem .9rem; }
+.book-field label, .book-dates label { display: block; font-size: .6rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--brass); margin-bottom: .25rem; }
+.book-field input, .book-field select, .book-dates input, .book-dates select { width: 100%; border: none; outline: none; background: transparent; font-family: var(--sans); font-size: .92rem; color: var(--ink); }
+.book-field input:focus-visible, .book-field select:focus-visible, .book-dates input:focus-visible, .book-dates select:focus-visible { outline: 2px solid var(--terracotta); outline-offset: 2px; }
+.price-breakdown { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.price-line { display: flex; justify-content: space-between; font-size: .9rem; color: var(--ink-soft); margin-bottom: .5rem; }
+.price-line.total { border-top: 1px solid var(--line); padding-top: .7rem; margin-top: .3rem; color: var(--ink); }
+.price-line.total strong { font-family: var(--serif); font-size: 1.1rem; }
+.form-error { color: #b3261e; font-size: .85rem; margin-top: .7rem; }
+.pay-recap { background: var(--sand); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+.pay-recap-row { display: flex; justify-content: space-between; font-weight: 600; }
+.pay-recap-dates { font-size: .85rem; color: var(--ink-soft); margin-top: .3rem; }
+.pay-label { font-size: .82rem; color: var(--ink-soft); margin-bottom: .8rem; text-align: center; }
+.pay-card { border: 1px solid var(--line); border-radius: 8px; padding: 1rem; margin-bottom: .8rem; }
+.pay-card-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; }
+.pay-card-info { display: flex; align-items: center; gap: .7rem; }
+.pay-card-info strong { display: block; font-size: .9rem; }
+.pay-card-info small { color: var(--ink-soft); font-size: .75rem; }
+.pay-badge { font-size: .64rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: .25rem .6rem; border-radius: 100px; white-space: nowrap; }
+.pay-badge.local { background: #eaf3ea; color: var(--forest); }
+.pay-badge.intl { background: var(--sand); color: var(--brass); }
+.btn-feda { width: 100%; background: var(--forest); color: #fff; border: none; border-radius: 6px; padding: .85rem; font-family: var(--sans); font-weight: 600; font-size: .92rem; cursor: pointer; }
+.btn-feda:hover { filter: brightness(1.12); }
+.book-back { width: 100%; background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: .75rem; margin-top: .75rem; font-family: var(--sans); font-size: .88rem; color: var(--ink-soft); cursor: pointer; }
+.book-note { text-align: center; font-size: .78rem; color: var(--ink-soft); margin-top: 1rem; }
+.call-card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 1.3rem; text-align: center; }
+.call-card p { color: var(--ink-soft); font-size: .9rem; margin-bottom: .8rem; }
+.lightbox { display: none; position: fixed; inset: 0; background: rgba(20,12,6,.94); z-index: 1000; align-items: center; justify-content: center; }
+.lightbox.open { display: flex; }
+.lightbox img { max-width: 90vw; max-height: 85vh; object-fit: contain; border-radius: 4px; }
+.lb-close, .lb-nav { position: absolute; background: rgba(255,255,255,.14); border: none; color: #fff; cursor: pointer; border-radius: 50%; width: 48px; height: 48px; font-size: 1.4rem; display: grid; place-items: center; }
+.lb-close { top: 1.5rem; right: 1.5rem; }
+.lb-prev { left: 1.5rem; top: 50%; transform: translateY(-50%); }
+.lb-next { right: 1.5rem; top: 50%; transform: translateY(-50%); }
+.lb-close:hover, .lb-nav:hover { background: rgba(255,255,255,.28); }
+.lb-counter { position: absolute; bottom: 1.5rem; left: 50%; transform: translateX(-50%); color: #fff; font-size: .85rem; }
+@media (max-width: 900px) {
+  .detail-layout { grid-template-columns: 1fr; }
+  .booking-side { position: static; }
+  .gallery { grid-template-columns: 1fr; }
+  .gallery-side { grid-template-rows: none; grid-template-columns: repeat(4, 1fr); }
+  .feature-grid, .reviews { grid-template-columns: 1fr; }
+}
