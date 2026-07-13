@@ -152,6 +152,35 @@ function cacheInvalidate(prefix) {
   }
 }
 
+// ─── PAIEMENT : calcul sécurisé du montant côté serveur ─────────────────────
+// Le montant à débiter ne doit JAMAIS venir du client : on le recalcule
+// toujours à partir du prix de la chambre en base × le nombre de nuits.
+const XOF_TO_EUR_RATE = 655.957; // taux fixe officiel XOF/EUR (zone CFA)
+
+// Calcule le nombre de nuits entre deux dates "YYYY-MM-DD". Retourne null
+// si les dates sont invalides ou si le séjour ne fait pas au moins 1 nuit.
+function computeNights(checkin, checkout) {
+  const inDate = new Date(checkin);
+  const outDate = new Date(checkout);
+  if (isNaN(inDate.getTime()) || isNaN(outDate.getTime())) return null;
+  const nights = Math.round((outDate - inDate) / 86400000);
+  if (!Number.isInteger(nights) || nights < 1) return null;
+  return nights;
+}
+
+// Récupère le prix fiable de la réservation (chambre active + nuits valides)
+// à partir des seules données de confiance (base + dates). Retourne null si
+// la demande n'est pas valide (chambre introuvable/inactive ou dates KO).
+async function computeVerifiedAmount(roomId, checkin, checkout) {
+  const nights = computeNights(checkin, checkout);
+  if (!nights) return null;
+  const room = await prisma.room.findFirst({ where: { id: roomId, active: true } });
+  if (!room) return null;
+  const totalAmountXOF = room.price * nights;
+  const amountEur = Math.round((totalAmountXOF / XOF_TO_EUR_RATE) * 100) / 100;
+  return { room, nights, totalAmountXOF, amountEur };
+}
+
 const { FedaPay, Transaction } = require("fedapay");
 
 const app = express();
@@ -405,17 +434,20 @@ app.post("/payment/fedapay/init", async (req, res) => {
     phone,
     email,
     guests,
-    nights,
-    totalAmount,
   } = req.body;
   try {
+    // Montant recalculé côté serveur — on ignore totalAmount envoyé par le client
+    const verified = await computeVerifiedAmount(roomId, checkin, checkout);
+    if (!verified) return res.redirect("/payment/cancel?error=invalid");
+    const { nights, totalAmountXOF } = verified;
+
     FedaPay.setApiKey(process.env.FEDAPAY_SECRET_KEY);
     FedaPay.setEnvironment(process.env.FEDAPAY_ENV || "sandbox");
 
     const nameParts = (fullname || "Client").trim().split(" ");
     const transaction = await Transaction.create({
       description: `Réservation – ${room} · ${nights} nuit(s)`,
-      amount: parseInt(totalAmount),
+      amount: totalAmountXOF,
       currency: { iso: "XOF" },
       callback_url: `${BASE_URL}/payment/fedapay/callback`,
       customer: {
@@ -438,8 +470,8 @@ app.post("/payment/fedapay/init", async (req, res) => {
       phone,
       email,
       guests: parseInt(guests) || 1,
-      nights: parseInt(nights) || 1,
-      totalAmount: parseInt(totalAmount),
+      nights,
+      totalAmount: totalAmountXOF,
       paymentMethod: "fedapay",
     };
     req.session.fedapayTxId = transaction.id;
@@ -485,7 +517,11 @@ app.get("/payment/fedapay/callback", async (req, res) => {
 // PayPal – créer un ordre
 app.post("/payment/paypal/create-order", async (req, res) => {
   try {
-    const { amountEur } = req.body;
+    const { roomId, checkin, checkout } = req.body;
+    // Montant recalculé côté serveur — on ignore amountEur envoyé par le client
+    const verified = await computeVerifiedAmount(roomId, checkin, checkout);
+    if (!verified) return res.status(400).json({ error: "Réservation invalide" });
+
     const token = await getPayPalToken();
     const response = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
       method: "POST",
@@ -497,7 +533,7 @@ app.post("/payment/paypal/create-order", async (req, res) => {
         intent: "CAPTURE",
         purchase_units: [
           {
-            amount: { currency_code: "EUR", value: String(amountEur) },
+            amount: { currency_code: "EUR", value: String(verified.amountEur) },
             description: "Maison Stella – Réservation chambre",
           },
         ],
@@ -523,10 +559,13 @@ app.post("/payment/paypal/capture", async (req, res) => {
     phone,
     email,
     guests,
-    nights,
-    totalAmount,
   } = req.body;
   try {
+    // Montant recalculé côté serveur — on ignore totalAmount envoyé par le client
+    const verified = await computeVerifiedAmount(roomId, checkin, checkout);
+    if (!verified) return res.status(400).json({ success: false, error: "Réservation invalide" });
+    const { nights, totalAmountXOF } = verified;
+
     const token = await getPayPalToken();
     const response = await fetch(
       `${PAYPAL_BASE}/v2/checkout/orders/${orderID}/capture`,
@@ -552,15 +591,15 @@ app.post("/payment/paypal/capture", async (req, res) => {
           phone,
           email,
           guests: parseInt(guests) || 1,
-          nights: parseInt(nights) || 1,
-          totalAmount: parseInt(totalAmount),
+          nights,
+          totalAmount: totalAmountXOF,
           status: "confirmed",
           paymentMethod: "paypal",
           paymentStatus: "paid",
           paymentId: orderID,
         },
       });
-      sendBookingNotification({ room, checkin, checkout, fullname, phone, email, guests: parseInt(guests) || 1, nights: parseInt(nights) || 1, totalAmount: parseInt(totalAmount), paymentMethod: "paypal" }).catch(() => {});
+      sendBookingNotification({ room, checkin, checkout, fullname, phone, email, guests: parseInt(guests) || 1, nights, totalAmount: totalAmountXOF, paymentMethod: "paypal" }).catch(() => {});
       res.json({ success: true });
     } else {
       res.json({ success: false, error: "Paiement non complété" });

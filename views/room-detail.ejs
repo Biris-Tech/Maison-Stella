@@ -428,11 +428,16 @@
     paypalInited = true;
     paypal.Buttons({
       createOrder: async () => {
-        const amountEur = (totalAmount / XOF_TO_EUR).toFixed(2);
+        // Le montant est recalculé côté serveur à partir de roomId + dates
+        // (le total affiché ici n'est qu'indicatif, jamais utilisé pour débiter).
         const res = await fetch('/payment/paypal/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amountEur })
+          body: JSON.stringify({
+            roomId:   '<%= room.id %>',
+            checkin:  checkinEl.value,
+            checkout: checkoutEl.value
+          })
         });
         const data = await res.json();
         return data.id;
