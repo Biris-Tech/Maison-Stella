@@ -100,6 +100,5 @@ model Setting {
   heroImage   String
   aboutText   String @db.Text
   aboutText2  String @db.Text
-  adminPlain  String @default("stella2026")
   services    Json
 }

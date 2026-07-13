@@ -998,7 +998,7 @@ app.get("/admin/parametres", requireAuth, async (req, res) => {
 });
 
 app.post("/admin/parametres", requireAuth, requireRole("superadmin", "editor"), async (req, res) => {
-  const { tagline, description, aboutText, aboutText2, heroImage, siteName, address, phone, email, adminPlain } = req.body;
+  const { tagline, description, aboutText, aboutText2, heroImage, siteName, address, phone, email } = req.body;
   const role = req.session.user.role;
   // Champs accessibles à tous (editor + superadmin)
   const data = { tagline, description, aboutText, aboutText2, heroImage };
@@ -1008,7 +1008,6 @@ app.post("/admin/parametres", requireAuth, requireRole("superadmin", "editor"), 
     if (address !== undefined) data.address = address;
     if (phone !== undefined) data.phone = phone;
     if (email !== undefined) data.email = email;
-    if (adminPlain?.trim()) data.adminPlain = adminPlain.trim();
   }
   await prisma.setting.update({ where: { id: "main" }, data });
   cacheInvalidate("settings");
@@ -1251,13 +1250,22 @@ async function migrateAdminUser() {
   try {
     const count = await prisma.adminUser.count();
     if (count > 0) return;
-    const settings = await prisma.setting.findUnique({ where: { id: "main" } });
-    const plain = settings?.adminPlain || "stella2026";
+    let plain = process.env.ADMIN_INITIAL_PASSWORD;
+    const generated = !plain;
+    if (!plain) {
+      plain = require("crypto").randomBytes(9).toString("base64url");
+    }
     const passwordHash = await bcrypt.hash(plain, 12);
     await prisma.adminUser.create({
       data: { name: "Super Admin", email: "admin@maisonstella.tg", passwordHash, role: "superadmin" },
     });
-    console.log(`Migration: superadmin créé — email: admin@maisonstella.tg / mdp: ${plain}`);
+    if (generated) {
+      console.log(
+        `Migration: Aucun ADMIN_INITIAL_PASSWORD défini — mot de passe superadmin généré : ${plain} — connectez-vous et changez-le immédiatement`
+      );
+    } else {
+      console.log("Migration: superadmin créé — email: admin@maisonstella.tg");
+    }
   } catch (e) {
     console.error("Migration error:", e.message);
   }

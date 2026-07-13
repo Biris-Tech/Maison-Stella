@@ -84,18 +84,6 @@
         </div>
       </div>
 
-      <% if (typeof currentUser !== 'undefined' && currentUser?.role === 'superadmin') { %>
-      <div class="settings-card">
-        <h2 class="settings-section-title">Sécurité</h2>
-        <div class="settings-grid">
-          <div class="field">
-            <label>Modifier mon mot de passe</label>
-            <input type="password" name="adminPlain" placeholder="Laisser vide pour ne pas changer">
-          </div>
-        </div>
-      </div>
-      <% } %>
-
       <div class="form-actions">
         <button type="submit" class="btn-admin-primary btn-lg">Enregistrer les paramètres</button>
       </div>

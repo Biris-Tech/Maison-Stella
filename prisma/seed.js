@@ -17,7 +17,6 @@ async function main() {
       heroImage: 'IMG_0497 Large.jpeg',
       aboutText: "Maison Stella est une résidence de charme fondée avec l'ambition de faire vivre à chaque hôte une expérience authentique et raffinée à Lomé. Chaque détail a été pensé pour votre confort.",
       aboutText2: "Niché à Avepozo, au bord du lac, notre établissement allie l'âme d'une maison familiale au standing d'un boutique hôtel haut de gamme.",
-      adminPlain: 'stella2026',
       services: [
         { icon: '🏊‍♂️', title: 'Piscine Privée', desc: 'Accès exclusif à notre piscine entourée de verdure, disponible 24h/24.' },
         { icon: '👨‍🍳', title: 'Chef Cuisinier', desc: 'Notre chef prépare des menus sur mesure mettant en valeur la cuisine locale et internationale.' },
