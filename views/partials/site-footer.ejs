@@ -1,0 +1,30 @@
+<footer>
+  <div class="wrap">
+    <div class="foot-word reveal">Restez une nuit,<br>repartez <em>ailleurs</em>.</div>
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a href="/" class="brand"><img src="/image/logo.png" alt="<%= settings.siteName %>" class="brand-logo"><span class="brand-word">Maison&nbsp;<b>Stella</b><span class="dot">.</span></span></a>
+        <p><%= settings.tagline %> — Avepozo, au bord du lac, Lomé (Togo).</p>
+      </div>
+      <div class="foot-col">
+        <h5>Naviguer</h5>
+        <a href="/">Accueil</a>
+        <a href="/chambres">Chambres</a>
+        <a href="/#experience">L'expérience</a>
+        <a href="/#contact">Contact</a>
+      </div>
+      <div class="foot-col">
+        <h5>Nous trouver</h5>
+        <p><%= settings.address %></p>
+        <a href="tel:<%= settings.phone.replace(/\s/g,'') %>"><%= settings.phone %></a>
+        <a href="https://www.airbnb.fr/users/profile/1470333770914956183" target="_blank" rel="noopener">Airbnb</a>
+        <a href="https://www.instagram.com/maisonstellalome/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.tiktok.com/@maisonstellalome" target="_blank" rel="noopener">TikTok</a>
+      </div>
+    </div>
+    <div class="foot-bot">
+      <span>© <%= new Date().getFullYear() %> <%= settings.siteName %></span>
+      <span>Avepozo · Lomé · Togo</span>
+    </div>
+  </div>
+</footer>

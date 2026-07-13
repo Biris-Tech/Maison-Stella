@@ -157,6 +157,22 @@ footer { background: var(--forest); color: #E6E2D6; padding: clamp(4rem, 8vw, 6r
 .foot-col a:hover { color: #E9A17E; }
 .foot-bot { padding-top: 1.6rem; border-top: 1px solid rgba(255,255,255,.14); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; font-size: .8rem; color: rgba(230,226,214,.5); }
 
+/* PAGE HEADER (sous-pages) */
+.page-head { padding: clamp(8rem, 13vw, 10rem) 0 clamp(1.5rem, 3vw, 2.5rem); }
+.breadcrumb { font-size: .85rem; color: var(--ink-soft); margin-bottom: 1rem; }
+.breadcrumb a { color: var(--terracotta); }
+.page-head h1 { font-size: clamp(2.6rem, 6vw, 4.4rem); }
+.page-head h1 em { font-style: italic; color: var(--terracotta); }
+.page-head .sub { color: var(--ink-soft); margin-top: .9rem; font-size: 1.05rem; }
+
+/* FILTER BAR */
+.filter-bar { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; padding-bottom: 2.2rem; border-bottom: 1px solid var(--line); margin-bottom: 3rem; }
+.filter-count { font-size: .9rem; color: var(--ink-soft); font-weight: 500; }
+.chips { display: flex; gap: .6rem; flex-wrap: wrap; }
+.chip { background: transparent; border: 1px solid var(--line); border-radius: 100px; padding: .55rem 1.25rem; min-height: 44px; font-size: .85rem; font-weight: 500; color: var(--ink-soft); cursor: pointer; font-family: var(--sans); transition: all .2s; }
+.chip:hover { border-color: var(--terracotta); color: var(--terracotta); }
+.chip.active { background: var(--ink); color: var(--ivory); border-color: var(--ink); }
+
 :focus-visible { outline: 2px solid var(--terracotta); outline-offset: 3px; }
 
 /* reveal */
