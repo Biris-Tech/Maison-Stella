@@ -2,6 +2,11 @@
 
 Liste de travail du projet. Cases cochées = déjà fait (sur branche, non fusionné).
 
+## Méthode
+
+- **Design / refonte** (harmonisation, admin, champs, page « Services », identité visuelle) → menés avec **`/impeccable` + Opus**, objectif : une refonte **époustouflante** et cohérente de bout en bout. Pas de sous-agents, pas de branches éparpillées.
+- Ce fichier est **tenu à jour au fil de l'avancement** (cases cochées + push).
+
 ---
 
 ## 🔴 Sécurité (prioritaire)
@@ -14,8 +19,8 @@ Liste de travail du projet. Cases cochées = déjà fait (sur branche, non fusio
 
 ## 📋 Demandes du responsable (note vocale)
 
-- [ ] **Admin / gestion des champs** — revoir la saisie des champs de chambre, harmoniser le design du site.
-- [ ] **Page « Nos services »** — retravailler pour la conversion (donner envie de réserver).
+- [ ] **Admin / gestion des champs** — revoir la saisie des champs de chambre, harmoniser le design du site. → *refonte `/impeccable` (Opus)*
+- [ ] **Page « Nos services »** — retravailler pour la conversion (donner envie de réserver). → *refonte `/impeccable` (Opus)*
 - [ ] **Intégration du paiement** — vérifier que FedaPay + PayPal fonctionnent bien de bout en bout.
 - [ ] **Blog automatique (OpenAI)** — 1 article/jour généré à partir des chambres, optimisé SEO, prompt « anti-détection IA ». ⛔ *Bloqué : besoin d'une clé OpenAI.*
 - [ ] **Google Search Console** — vérifier le site, soumettre le sitemap, suivre l'indexation. ⛔ *Bloqué : besoin que le site soit déployé en prod.*
