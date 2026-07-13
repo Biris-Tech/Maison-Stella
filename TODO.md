@@ -19,8 +19,11 @@ Liste de travail du projet. Cases cochées = déjà fait (sur branche, non fusio
 
 ## 📋 Demandes du responsable (note vocale)
 
-- [ ] **Admin / gestion des champs** — revoir la saisie des champs de chambre, harmoniser le design du site. → *refonte `/impeccable` (Opus)*
-- [ ] **Page « Nos services »** — retravailler pour la conversion (donner envie de réserver). → *refonte `/impeccable` (Opus)*
+- [x] **Refonte du site public** — accueil, chambres, fiche chambre, blog : direction lumineuse & éditoriale, logo, chambres + articles de démo. — branche `feat/refonte`
+- [x] **Page « Nos services »** — refondue en section éditoriale sur l'accueil (branche `feat/refonte`).
+- [ ] **Gestion des champs (admin)** — éditeur structuré pour la saisie des chambres (back-office).
+- [ ] **Harmoniser l'admin** sur la nouvelle identité (le back-office garde encore l'ancien style).
+- [ ] **Pages résultat de paiement** (succès / annulation) à passer au nouveau design.
 - [ ] **Intégration du paiement** — vérifier que FedaPay + PayPal fonctionnent bien de bout en bout.
 - [ ] **Blog automatique (OpenAI)** — 1 article/jour généré à partir des chambres, optimisé SEO, prompt « anti-détection IA ». ⛔ *Bloqué : besoin d'une clé OpenAI.*
 - [ ] **Google Search Console** — vérifier le site, soumettre le sitemap, suivre l'indexation. ⛔ *Bloqué : besoin que le site soit déployé en prod.*
