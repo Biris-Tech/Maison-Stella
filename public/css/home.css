@@ -334,3 +334,26 @@ html.js .reveal.in { opacity: 1; transform: none; }
 .result-card a.inline { color: var(--terracotta); font-weight: 600; }
 .result-badge { display: inline-flex; align-items: center; gap: .4rem; background: #eaf3ea; color: var(--forest); font-size: .78rem; font-weight: 600; padding: .35rem .9rem; border-radius: 100px; margin-bottom: 1.3rem; }
 .result-actions { display: flex; gap: .8rem; flex-wrap: wrap; justify-content: center; margin-top: 1.6rem; }
+
+/* ── TUNNEL DE RÉSERVATION ── */
+.search-recap { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; background: var(--sand); border-radius: 8px; padding: .8rem 1.1rem; margin-bottom: 1.6rem; font-size: .92rem; color: var(--ink-soft); }
+.search-recap strong { color: var(--ink); font-weight: 600; }
+.search-recap a { color: var(--terracotta); font-weight: 600; margin-left: auto; }
+.search-recap a:hover { text-decoration: underline; }
+
+.pay-hint { font-size: .82rem; color: var(--ink-soft); line-height: 1.5; background: var(--sand); border-radius: 8px; padding: .7rem .9rem; margin-bottom: 1rem; }
+.pay-hint strong { color: var(--ink); }
+
+.mobile-book-bar { display: none; }
+@media (max-width: 900px) {
+  .mobile-book-bar {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
+    align-items: center; justify-content: space-between; gap: 1rem;
+    background: #fff; border-top: 1px solid var(--line); padding: .8rem 1.2rem;
+    box-shadow: 0 -8px 28px -14px rgba(60,40,20,.3);
+  }
+  .mbb-price strong { font-family: var(--serif); font-size: 1.3rem; color: var(--ink); }
+  .mbb-price span { color: var(--ink-soft); font-size: .8rem; }
+  .mobile-book-bar .btn { padding: .85rem 1.7rem; }
+  body.has-book-bar { padding-bottom: 78px; }
+}

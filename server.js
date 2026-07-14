@@ -357,7 +357,18 @@ app.get("/", async (_req, res) => {
   res.render("index", { rooms, featured, settings, page: "home" });
 });
 
-app.get("/chambres", async (_req, res) => {
+// Recherche du hero : on ne garde que des valeurs propres, à propager dans le tunnel.
+function searchQuery(req) {
+  const isDate = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+  const guests = parseInt(req.query.guests, 10);
+  return {
+    checkin: isDate(req.query.checkin) ? req.query.checkin : "",
+    checkout: isDate(req.query.checkout) ? req.query.checkout : "",
+    guests: guests >= 1 && guests <= 10 ? String(guests) : "",
+  };
+}
+
+app.get("/chambres", async (req, res) => {
   let settings = cacheGet("settings");
   let rooms = cacheGet("rooms:all");
   if (!settings || !rooms) {
@@ -368,7 +379,7 @@ app.get("/chambres", async (_req, res) => {
     cacheSet("settings", settings);
     cacheSet("rooms:all", rooms);
   }
-  res.render("rooms", { rooms, settings, page: "rooms" });
+  res.render("rooms", { rooms, settings, page: "rooms", q: searchQuery(req) });
 });
 
 app.get("/chambre/:id", async (req, res) => {
@@ -389,6 +400,7 @@ app.get("/chambre/:id", async (req, res) => {
     settings,
     page: "rooms",
     paypalClientId: process.env.PAYPAL_CLIENT_ID || "",
+    q: searchQuery(req),
   });
 });
 
