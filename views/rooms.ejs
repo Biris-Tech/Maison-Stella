@@ -16,91 +16,87 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Nos Chambres – <%= settings.siteName %>">
   <meta name="twitter:image" content="<%= baseUrl %>/image/<%= encodeURIComponent(settings.heroImage) %>">
+  <script>document.documentElement.classList.add('js');</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/home.css?v=3">
   <link rel="icon" href="/image/logo.png" type="image/png">
 </head>
 <body>
 
-<div id="preloader">
-  <div class="preloader-inner">
-    <img src="/image/logo.png" alt="<%= settings.siteName %>" class="preloader-logo" width="72" height="72">
-    <div class="preloader-bar"><div class="preloader-bar-inner"></div></div>
+<%- include('partials/site-nav', { settings }) %>
+
+<header class="page-head">
+  <div class="wrap">
+    <p class="breadcrumb reveal"><a href="/">Accueil</a> · Nos chambres</p>
+    <h1 class="reveal">Chambres &amp; <em>suites</em></h1>
+    <p class="sub reveal">Tarifs par nuit · petit-déjeuner selon disponibilité · réservation en quelques minutes.</p>
   </div>
-</div>
+</header>
 
-<%- include('partials/nav', { page, settings }) %>
+<section style="padding-bottom: clamp(4rem, 9vw, 8rem)">
+  <div class="wrap">
+    <% var qs = Object.keys(q).filter(function (k) { return q[k]; }).map(function (k) { return k + '=' + encodeURIComponent(q[k]); }).join('&'); %>
+    <% if (q.checkin && q.checkout) { %>
+    <p class="search-recap reveal">
+      Séjour recherché : <strong><%= q.checkin %> → <%= q.checkout %></strong><% if (q.guests) { %> · <%= q.guests %> voyageur<%= q.guests > 1 ? 's' : '' %><% } %>
+      <a href="/#booking">Modifier</a>
+    </p>
+    <% } %>
 
-<div class="page-hero-sm">
-  <div class="container">
-    <p class="breadcrumb"><a href="/">Accueil</a> / Nos chambres</p>
-    <h1>Nos Chambres & <span class="text-primary">Suites</span></h1>
-    <p class="page-hero-sub">Tarifs par nuit · Petit-déjeuner inclus selon disponibilité</p>
-  </div>
-</div>
-
-<div class="container" style="padding-top: 2rem; padding-bottom: 5rem;">
-  <div class="filter-bar">
-    <span class="filter-count"><%= rooms.length %> logement<%= rooms.length > 1 ? 's' : '' %></span>
-    <div class="filter-chips">
-      <button class="chip active" data-filter="all">Tous</button>
-      <button class="chip" data-filter="2">2 pers.</button>
-      <button class="chip" data-filter="3">3 pers.</button>
-      <button class="chip" data-filter="4">4 pers.</button>
+    <div class="filter-bar reveal">
+      <span class="filter-count"><%= rooms.length %> logement<%= rooms.length > 1 ? 's' : '' %></span>
+      <div class="chips">
+        <button class="chip active" data-filter="all">Tous</button>
+        <button class="chip" data-filter="2">2 voyageurs</button>
+        <button class="chip" data-filter="3">3 voyageurs</button>
+        <button class="chip" data-filter="4">4 voyageurs</button>
+      </div>
     </div>
-  </div>
 
-  <div class="rooms-grid-full" id="roomsGrid">
-    <% rooms.forEach(room => { %>
-    <a href="/chambre/<%= room.id %>" class="room-card" data-capacity="<%= room.capacity %>">
-      <div class="room-card-img">
-        <img src="/image/<%= encodeURIComponent(room.images[0]) %>" alt="<%= room.name %>" loading="lazy">
-        <% if (room.badge) { %>
-        <span class="room-badge"><%= room.badge %></span>
-        <% } %>
-        <button class="room-wishlist" onclick="event.preventDefault(); this.classList.toggle('active')" title="Favori">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-        </button>
-      </div>
-      <div class="room-card-body">
-        <div class="room-card-top">
-          <h3 class="room-card-name"><%= room.name %></h3>
-          <div class="room-card-rating"><svg width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 4.9</div>
+    <% if (rooms && rooms.length) { %>
+    <div class="ch-grid" id="roomsGrid">
+      <% rooms.forEach(room => { %>
+      <a href="/chambre/<%= room.id %><%= qs ? '?' + qs : '' %>" class="room reveal" data-capacity="<%= room.capacity %>">
+        <div class="room-photo">
+          <img src="/image/<%= encodeURIComponent(room.images[0]) %>" alt="<%= room.name %>" loading="lazy">
+          <% if (room.badge) { %><span class="room-tag"><%= room.badge %></span><% } %>
         </div>
-        <p class="room-card-meta"><%= room.bedType %> · <%= room.capacity %> pers. max</p>
-        <p class="room-card-desc"><%= room.desc.substring(0, 100) %>…</p>
-        <div class="room-card-amenities">
-          <% room.amenities.slice(0, 3).forEach(a => { %><span class="amenity-tag"><%= a %></span><% }) %>
-        </div>
-        <div class="room-card-footer">
-          <div class="room-card-price">
-            <strong><%= room.price.toLocaleString('fr-FR') %></strong>
-            <span>FCFA / nuit</span>
+        <div class="room-body">
+          <div>
+            <h3><%= room.name %></h3>
+            <p class="room-meta"><%= room.bedType %> · <%= room.capacity %> voyageurs</p>
           </div>
-          <span class="room-card-link">Réserver →</span>
+          <div class="room-price"><strong><%= room.price.toLocaleString('fr-FR') %></strong><small>FCFA / nuit</small></div>
         </div>
-      </div>
-    </a>
-    <% }) %>
+      </a>
+      <% }) %>
+    </div>
+    <% } else { %>
+    <div class="ch-empty reveal">
+      <h3>Nos chambres arrivent très bientôt</h3>
+      <p>Contactez-nous dès maintenant pour connaître nos disponibilités et réserver votre séjour.</p>
+      <a href="tel:<%= settings.phone.replace(/\s/g,'') %>" class="btn btn-p">Nous appeler</a>
+    </div>
+    <% } %>
   </div>
-</div>
+</section>
 
-<%- include('partials/footer', { settings }) %>
-<script src="/js/main.js"></script>
+<%- include('partials/site-footer', { settings }) %>
+
+<script src="/js/site.js"></script>
 <script>
-  document.querySelectorAll('.chip').forEach(chip => {
-    chip.addEventListener('click', function() {
-      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      document.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
       this.classList.add('active');
-      const filter = this.dataset.filter;
-      document.querySelectorAll('.room-card').forEach(card => {
-        card.style.display = (filter === 'all' || card.dataset.capacity >= filter) ? '' : 'none';
+      var f = this.dataset.filter;
+      document.querySelectorAll('.room').forEach(function (card) {
+        card.style.display = (f === 'all' || Number(card.dataset.capacity) >= Number(f)) ? '' : 'none';
       });
     });
   });
-  window.addEventListener('load', () => { const p = document.getElementById('preloader'); if (p) p.classList.add('fade-out'); });
 </script>
 </body>
 </html>

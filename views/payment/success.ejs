@@ -4,45 +4,39 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Réservation confirmée – <%= settings.siteName %></title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/main.css">
+  <meta name="robots" content="noindex">
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/home.css?v=3">
   <link rel="icon" href="/image/logo.png" type="image/png">
-  <style>
-    .payment-result-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-gray); padding: 2rem; }
-    .payment-result-card { background: #fff; border-radius: 20px; padding: 3rem 2.5rem; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 8px 40px rgba(0,0,0,0.08); }
-    .result-icon { font-size: 4rem; margin-bottom: 1.25rem; }
-    .result-card-title { font-size: 1.6rem; font-weight: 700; color: var(--dark); margin-bottom: 0.75rem; }
-    .result-card-text { color: var(--muted); line-height: 1.7; font-size: 0.95rem; margin-bottom: 2rem; }
-    .method-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: #ECFDF5; color: #065F46; font-size: 0.8rem; font-weight: 600; padding: 0.35rem 0.9rem; border-radius: 100px; margin-bottom: 1.5rem; }
-    .result-actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
-  </style>
 </head>
 <body>
-<%- include('../partials/nav', { page, settings }) %>
 
-<div class="payment-result-page">
-  <div class="payment-result-card">
-    <div class="result-icon"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+<%- include('../partials/site-nav', { settings }) %>
+
+<main class="result-page">
+  <div class="result-card">
+    <div class="result-icon ok">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
     <% if (method === 'paypal') { %>
-    <div class="method-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:0.3rem"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Payé via PayPal</div>
+    <span class="result-badge">Payé via PayPal</span>
     <% } else if (method === 'fedapay') { %>
-    <div class="method-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:0.3rem"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg> Payé via FedaPay</div>
+    <span class="result-badge">Payé via FedaPay</span>
     <% } %>
-    <h1 class="result-card-title">Réservation confirmée !</h1>
-    <p class="result-card-text">
-      Merci pour votre confiance. Votre réservation à <strong><%= settings.siteName %></strong> est bien enregistrée.
-      Vous recevrez une confirmation par SMS ou e-mail sous peu.
-    </p>
-    <p class="result-card-text" style="margin-top:-1rem;">
-      Pour toute question : <a href="tel:<%= settings.phone.replace(/\s/g,'') %>" style="color:var(--primary);"><%= settings.phone %></a>
-    </p>
+    <h1>Réservation confirmée</h1>
+    <p>Merci pour votre confiance. Votre séjour à <strong><%= settings.siteName %></strong> est bien enregistré — vous recevrez une confirmation par SMS ou e-mail sous peu.</p>
+    <p>Une question ? <a href="tel:<%= settings.phone.replace(/\s/g,'') %>" class="inline"><%= settings.phone %></a></p>
     <div class="result-actions">
-      <a href="/" class="btn-primary">Retour à l'accueil</a>
-      <a href="/chambres" class="btn-outline">Voir les chambres</a>
+      <a href="/" class="btn btn-p">Retour à l'accueil</a>
+      <a href="/chambres" class="btn btn-o">Voir les chambres</a>
     </div>
   </div>
-</div>
+</main>
 
-<%- include('../partials/footer', { settings }) %>
+<%- include('../partials/site-footer', { settings }) %>
+<script src="/js/site.js"></script>
 </body>
 </html>

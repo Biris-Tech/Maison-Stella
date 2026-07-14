@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin – Modifier <%= room.name %></title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/admin.css?v=3">
 </head>
 <body class="admin-body">
 
@@ -53,7 +53,11 @@
               </div>
               <div class="field">
                 <label>Type de lit</label>
-                <input type="text" name="bedType" value="<%= room.bedType %>">
+                <% var beds = ['Lit simple','Lit double','Lit queen','Lit king','Lits jumeaux','2 lits doubles','Canapé-lit']; %>
+                <select name="bedType">
+                  <% beds.forEach(function(b){ %><option value="<%= b %>" <%= room.bedType === b ? 'selected' : '' %>><%= b %></option><% }); %>
+                  <% if (room.bedType && beds.indexOf(room.bedType) === -1) { %><option value="<%= room.bedType %>" selected><%= room.bedType %></option><% } %>
+                </select>
               </div>
               <div class="field">
                 <label>Badge</label>
@@ -69,15 +73,25 @@
                 <label>Description</label>
                 <textarea name="desc" rows="4"><%= room.desc %></textarea>
               </div>
-              <div class="field">
+              <div class="field field-full">
                 <label>Composition de la chambre</label>
-                <textarea name="composition" rows="7"><%= room.composition.join('\n') %></textarea>
-                <span class="field-hint">Un élément par ligne</span>
+                <div id="compositionWidget">
+                  <div class="dyn-list"></div>
+                  <button type="button" class="field-add-btn dyn-add">+ Ajouter un élément</button>
+                </div>
+                <input type="hidden" name="composition" id="compositionHidden" value="<%= room.composition.join('\n') %>">
               </div>
-              <div class="field">
-                <label>Commodités / Services</label>
-                <textarea name="amenities" rows="7"><%= room.amenities.join('\n') %></textarea>
-                <span class="field-hint">Un élément par ligne</span>
+              <div class="field field-full">
+                <label>Équipements & services</label>
+                <div id="amenitiesWidget">
+                  <div class="amenities-checklist"></div>
+                  <div class="chips-box"></div>
+                  <div class="custom-add-row">
+                    <input type="text" class="custom-input" placeholder="Ajouter un équipement personnalisé…">
+                    <button type="button" class="field-add-btn custom-add">Ajouter</button>
+                  </div>
+                </div>
+                <input type="hidden" name="amenities" id="amenitiesHidden" value="<%= room.amenities.join('\n') %>">
               </div>
             </div>
             <div class="form-actions" style="margin-top:1.5rem;">
@@ -190,6 +204,7 @@
 </div>
 
 <script src="/js/admin.js"></script>
+<script src="/js/admin-fields.js"></script>
 <script>
   /* ── Confirmation inline suppression photo ── */
   function askDelete(idx) {
