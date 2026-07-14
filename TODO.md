@@ -25,7 +25,15 @@ Liste de travail du projet. Cases cochées = déjà fait (sur branche, non fusio
 - [x] **Pages résultat de paiement** (succès / annulation) — refondues (branche `feat/refonte`).
 - [x] **Gestion des champs (admin)** — éditeur structuré (checklist équipements + chips, liste dynamique composition, menu type de lit). — branche `feat/refonte`
 - [ ] **Intégration du paiement** — vérifier que FedaPay + PayPal fonctionnent bien de bout en bout.
-- [ ] **Blog automatique (OpenAI)** — 1 article/jour généré à partir des chambres, optimisé SEO, prompt « anti-détection IA ». ⛔ *Bloqué : besoin d'une clé OpenAI.*
+- [x] **Blog automatique (IA)** — infrastructure complète sur branche `feat/blog-auto` :
+   - [x] Moteur de génération IA (`lib/blog-auto.js`) : prompts anti-détection + SEO
+   - [x] **Source 1 · Chambres** : article descriptif par chambre (données DB)
+   - [x] **Source 2 · Flux RSS** : récupère et reformule des articles tourisme
+   - [x] **CTA en pied d'article** : texte + lien personnalisables
+   - [x] **Admin** : page `/admin/blog/auto` (config, flux RSS, logs, génération manuelle)
+   - [x] **Publication configurable** : brouillon (validation humaine) ou automatique
+   - [x] Planificateur cron (node-cron), configurable depuis l'admin
+   ⚠️ *Prêt à fonctionner — ajouter `OPENAI_API_KEY=sk-...` dans `.env`.*
 - [ ] **Google Search Console** — vérifier le site, soumettre le sitemap, suivre l'indexation. ⛔ *Bloqué : besoin que le site soit déployé en prod.*
 
 ## ♿ Accessibilité
