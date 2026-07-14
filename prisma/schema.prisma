@@ -73,9 +73,36 @@ model BlogPost {
   authorName  String
   status      String    @default("draft")
   tags        Json      @default("[]")
+  source      String    @default("manual")
+  sourceUrl   String    @default("")
+  aiGenerated Boolean   @default(false)
   publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+model BlogAutoConfig {
+  id              String    @id @default("main")
+  enabled         Boolean   @default(false)
+  publicationMode String    @default("review")
+  rssFeeds        Json      @default("[]")
+  roomArticles    Boolean   @default(true)
+  cronSchedule    String    @default("0 8,18 * * *")
+  ctaText         String    @db.Text
+  ctaLink         String    @default("/chambres")
+  aiModel         String    @default("gpt-4o-mini")
+  lastRunAt       DateTime?
+  lastRunLog      String    @db.Text @default("")
+}
+
+model BlogAutoLog {
+  id        String   @id @default(cuid())
+  action    String
+  source    String    @default("")
+  postId    String?
+  details   String    @db.Text @default("")
+  success   Boolean   @default(true)
+  createdAt DateTime  @default(now())
 }
 
 model ActivityLog {

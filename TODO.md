@@ -25,20 +25,34 @@ Liste de travail du projet. Cases cochées = déjà fait (sur branche, non fusio
 - [x] **Pages résultat de paiement** (succès / annulation) — refondues (branche `feat/refonte`).
 - [x] **Gestion des champs (admin)** — éditeur structuré (checklist équipements + chips, liste dynamique composition, menu type de lit). — branche `feat/refonte`
 - [ ] **Intégration du paiement** — vérifier que FedaPay + PayPal fonctionnent bien de bout en bout.
-- [ ] **Blog automatique (OpenAI)** — 1 article/jour généré à partir des chambres, optimisé SEO, prompt « anti-détection IA ». ⛔ *Bloqué : besoin d'une clé OpenAI.*
+- [x] **Blog automatique (IA)** — infrastructure complète : branche `feat/blog-auto`
+   - [x] Moteur de génération IA (`lib/blog-auto.js`) avec prompts anti-détection + SEO
+   - [x] **Source 1 · Chambres** : génère un article descriptif par chambre (données DB)
+   - [x] **Source 2 · Flux RSS** : récupère, reformule et publie des articles tourisme
+   - [x] **CTA en pied d'article** : personnalisable (texte + lien)
+   - [x] **Back-office admin** : page `/admin/blog/auto` (config, flux RSS, logs, génération manuelle)
+   - [x] **Mode de publication configurable** : brouillon (validation humaine) ou auto
+   - [x] Planificateur cron (node-cron), configurable depuis l'admin
+   - [x] Test de connexion API intégré
+   ⚠️ *Prêt à fonctionner — il suffit d'ajouter `OPENAI_API_KEY=sk-...` dans `.env`.*
 - [ ] **Google Search Console** — vérifier le site, soumettre le sitemap, suivre l'indexation. ⛔ *Bloqué : besoin que le site soit déployé en prod.*
 
-## ♿ Accessibilité
+## ♿ Accessibilité (trouvé à l'évaluation)
 
-- [x] Labels liés, focus clavier visible, galerie navigable au clavier, contrastes ≥ 4.5:1, cibles tactiles ≥ 44px — **traités dans la refonte** (`feat/refonte`).
+- [ ] Lier chaque `<label>` à son champ (`for`/`id`) — recherche, contact, réservation.
+- [ ] Focus clavier visible sur les widgets de réservation (`outline:none` sans remplacement).
+- [ ] Bouton burger nommé (`aria-label`).
+- [ ] Galerie photo de la chambre navigable au clavier.
+- [ ] Contrastes < 4.5:1 (texte gris `--muted`, copyright du footer).
+- [ ] Cibles tactiles < 44×44px (burger, chips, favoris).
 
 ## 🎯 Conversion / tunnel de réservation
 
-- [x] **État vide** sur `/chambres` — ajouté (`feat/refonte`).
-- [x] **Persistance des dates** — la recherche du hero suit jusqu'à la fiche chambre (rappel du séjour, liens porteurs, formulaire pré-rempli). — `feat/refonte`
-- [x] **CTA de réservation sticky en mobile** — barre fixe avec prix + « Réserver ». — `feat/refonte`
-- [x] **Aide au choix du paiement** — Mobile Money/Carte (local) vs PayPal (international). — `feat/refonte`
-- [ ] **Avis réels** — ⚠️ « 4,9 · 12 avis » + 2 avis sont **inventés et identiques sur toutes les chambres**, sur un site qui encaisse de vrais paiements. À traiter (décision produit en attente).
+- [ ] **État vide** sur `/chambres` (aujourd'hui grille vide sans message si aucune chambre).
+- [ ] **Avis réels** — « 4.9 · 12 avis » est codé en dur et identique sur toutes les chambres.
+- [ ] **Persistance des dates** — la recherche du hero ne se reporte pas jusqu'à la fiche chambre.
+- [ ] **CTA de réservation sticky en mobile** (aujourd'hui enterré sous la galerie).
+- [ ] **Aide au choix du paiement** — guider FedaPay (local) vs PayPal (international).
 
 ## ⚡ Performance & nettoyage
 

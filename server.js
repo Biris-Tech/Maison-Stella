@@ -152,6 +152,7 @@ function cacheInvalidate(prefix) {
   }
 }
 
+const blogAuto = require("./lib/blog-auto");
 const { FedaPay, Transaction } = require("fedapay");
 
 const app = express();
@@ -1227,6 +1228,94 @@ app.get("/admin/logs", requireAuth, requireRole("superadmin"), async (req, res) 
   res.render("admin/logs", { logs, users, filters: req.query, settings: res.locals.settings });
 });
 
+// ─── BLOG AUTO (IA) ──────────────────────────────────────────────────────────
+
+app.get("/admin/blog/auto", requireAuth, requireRole("superadmin", "editor"), async (_req, res) => {
+  let config = await prisma.blogAutoConfig.findUnique({ where: { id: "main" } });
+  if (!config) {
+    config = await prisma.blogAutoConfig.create({
+      data: {
+        id: "main",
+        ctaText: "Envie de découvrir le Togo ? Réservez votre séjour à Maison Stella et vivez une expérience inoubliable.",
+      },
+    });
+  }
+  const logs = await prisma.blogAutoLog.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 30,
+  });
+  const aiArticles = await prisma.blogPost.count({ where: { aiGenerated: true } });
+  const draftAI = await prisma.blogPost.count({ where: { aiGenerated: true, status: "draft" } });
+  const hasApiKey = !!process.env.OPENAI_API_KEY;
+  res.render("admin/blog-auto", {
+    config,
+    logs,
+    aiArticles,
+    draftAI,
+    hasApiKey,
+    settings: res.locals.settings,
+    success: _req.query.success || null,
+    error: _req.query.error || null,
+  });
+});
+
+app.post("/admin/blog/auto/settings", requireAuth, requireRole("superadmin", "editor"), async (req, res) => {
+  const { enabled, publicationMode, rssFeeds, roomArticles, cronSchedule, ctaText, ctaLink, aiModel } = req.body;
+
+  let feeds = [];
+  if (rssFeeds) {
+    try {
+      feeds = JSON.parse(rssFeeds);
+    } catch {
+      feeds = [];
+    }
+  }
+
+  await prisma.blogAutoConfig.upsert({
+    where: { id: "main" },
+    create: {
+      id: "main",
+      enabled: enabled === "on",
+      publicationMode: publicationMode || "review",
+      rssFeeds: feeds,
+      roomArticles: roomArticles === "on",
+      cronSchedule: cronSchedule || "0 8,18 * * *",
+      ctaText: ctaText || "",
+      ctaLink: ctaLink || "/chambres",
+      aiModel: aiModel || "gpt-4o-mini",
+    },
+    update: {
+      enabled: enabled === "on",
+      publicationMode: publicationMode || "review",
+      rssFeeds: feeds,
+      roomArticles: roomArticles === "on",
+      cronSchedule: cronSchedule || "0 8,18 * * *",
+      ctaText: ctaText || "",
+      ctaLink: ctaLink || "/chambres",
+      aiModel: aiModel || "gpt-4o-mini",
+    },
+  });
+
+  logActivity(req, "BLOG_AUTO_SETTINGS");
+  blogAuto.restartScheduler();
+  res.redirect("/admin/blog/auto?success=Configuration+enregistrée");
+});
+
+app.post("/admin/blog/auto/generate", requireAuth, requireRole("superadmin", "editor"), async (req, res) => {
+  try {
+    const result = await blogAuto.runGeneration();
+    if (result.error) return res.json({ ok: false, error: result.error });
+    res.json({ ok: true, ...result });
+  } catch (e) {
+    res.json({ ok: false, error: e.message });
+  }
+});
+
+app.post("/admin/blog/auto/test", requireAuth, requireRole("superadmin", "editor"), async (_req, res) => {
+  const result = await blogAuto.testConnection();
+  res.json(result);
+});
+
 // ─── BLOG PUBLIC ─────────────────────────────────────────────────────────────
 app.get("/blog", async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -1265,6 +1354,7 @@ async function migrateAdminUser() {
 
 // ─── START ────────────────────────────────────────────────────────────────────
 migrateAdminUser().then(() => {
+  blogAuto.init(prisma);
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on ${BASE_URL}`);
   });

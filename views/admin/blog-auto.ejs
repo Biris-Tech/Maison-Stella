@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Blog IA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css?v=4">
+  <link rel="icon" href="/image/logo.png" type="image/png">
+  <style>
+    .auto-stats{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem}
+    .auto-stat{flex:1;min-width:140px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;text-align:center}
+    .auto-stat .num{font-size:1.8rem;font-weight:700;color:var(--primary)}
+    .auto-stat .label{font-size:0.78rem;color:var(--muted);margin-top:0.25rem}
+    .api-status{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.82rem;font-weight:600;padding:0.35rem 0.9rem;border-radius:100px}
+    .api-ok{background:#f0fdf4;color:#166534}
+    .api-ko{background:#fef2f2;color:#991b1b}
+    .feed-list{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem}
+    .feed-item{display:flex;align-items:center;gap:0.75rem;background:var(--bg);padding:0.6rem 0.75rem;border-radius:var(--radius);border:1px solid var(--border);font-size:0.85rem}
+    .feed-item .feed-name{font-weight:600;white-space:nowrap}
+    .feed-item .feed-url{color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .feed-item .feed-remove{background:none;border:none;color:#ef4444;cursor:pointer;padding:0.25rem;font-size:1rem;line-height:1}
+    .add-feed-row{display:flex;gap:0.5rem;flex-wrap:wrap}
+    .add-feed-row input{flex:1;min-width:120px}
+    .log-table{font-size:0.8rem}
+    .log-table td,.log-table th{padding:0.4rem 0.6rem}
+    .log-ok{color:#166534}.log-err{color:#991b1b}
+    .toggle-switch{position:relative;display:inline-block;width:44px;height:24px}
+    .toggle-switch input{opacity:0;width:0;height:0}
+    .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:24px;transition:0.2s}
+    .toggle-slider:before{content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.2s}
+    .toggle-switch input:checked+.toggle-slider{background:var(--primary)}
+    .toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px)}
+    .gen-result{margin-top:1rem;padding:1rem;border-radius:var(--radius);font-size:0.85rem;display:none}
+    .gen-ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+    .gen-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+    .hint{font-size:0.78rem;color:var(--muted);margin-top:0.25rem}
+    .section-sep{border:none;border-top:1px solid var(--border);margin:1.5rem 0}
+    .btn-generate{background:var(--primary);color:#fff;border:none;padding:0.6rem 1.25rem;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:0.85rem;display:inline-flex;align-items:center;gap:0.4rem}
+    .btn-generate:hover{opacity:0.9}
+    .btn-generate:disabled{opacity:0.5;cursor:not-allowed}
+    .btn-test{background:transparent;border:1px solid var(--border);padding:0.4rem 0.9rem;border-radius:var(--radius);font-size:0.8rem;cursor:pointer;color:var(--dark);font-weight:500}
+    .btn-test:hover{border-color:var(--primary);color:var(--primary)}
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body class="admin-body">
+
+<%- include('sidebar', { activePage: 'blog-auto', settings }) %>
+
+<main class="admin-main">
+  <div class="admin-topbar">
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <a href="/admin/blog" class="topbar-back">← Blog</a>
+      <span class="topbar-sep">/</span>
+      <h1 class="admin-page-title">Blog IA — Génération automatique</h1>
+    </div>
+    <span class="api-status <%= hasApiKey ? 'api-ok' : 'api-ko' %>">
+      <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
+      <%= hasApiKey ? 'API connectée' : 'API non configurée' %>
+    </span>
+  </div>
+  <div class="admin-content">
+
+    <% if (success) { %><div class="alert alert-success"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:0.4rem"><polyline points="20 6 9 17 4 12"/></svg> <%= success %></div><% } %>
+    <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+    <div class="auto-stats">
+      <div class="auto-stat">
+        <div class="num"><%= aiArticles %></div>
+        <div class="label">Articles IA générés</div>
+      </div>
+      <div class="auto-stat">
+        <div class="num"><%= draftAI %></div>
+        <div class="label">En attente de validation</div>
+      </div>
+      <div class="auto-stat">
+        <div class="num"><%= config.rssFeeds ? config.rssFeeds.length : 0 %></div>
+        <div class="label">Flux RSS actifs</div>
+      </div>
+      <div class="auto-stat">
+        <div class="num" style="font-size:1rem;color:var(--dark)"><%= config.lastRunAt ? new Date(config.lastRunAt).toLocaleString('fr-FR') : '—' %></div>
+        <div class="label">Dernière exécution</div>
+      </div>
+    </div>
+
+    <% if (!hasApiKey) { %>
+    <div class="alert alert-error" style="margin-bottom:1.5rem">
+      <strong>Clé API requise.</strong> Ajoutez <code>OPENAI_API_KEY=sk-...</code> dans votre fichier <code>.env</code> et redémarrez le serveur pour activer la génération.
+    </div>
+    <% } %>
+
+    <form method="POST" action="/admin/blog/auto/settings" id="autoForm">
+      <div class="edit-page-grid">
+
+        <div>
+          <div class="settings-card">
+            <h2 class="settings-section-title">Configuration générale</h2>
+
+            <div class="field" style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem">
+              <label class="toggle-switch">
+                <input type="checkbox" name="enabled" <%= config.enabled ? 'checked' : '' %>>
+                <span class="toggle-slider"></span>
+              </label>
+              <div>
+                <strong>Génération automatique activée</strong>
+                <p class="hint">Le système génère des articles selon le planning ci-dessous.</p>
+              </div>
+            </div>
+
+            <div class="field" style="margin-bottom:1.25rem">
+              <label>Mode de publication</label>
+              <select name="publicationMode">
+                <option value="review" <%= config.publicationMode === 'review' ? 'selected' : '' %>>Brouillon (validation humaine)</option>
+                <option value="auto" <%= config.publicationMode === 'auto' ? 'selected' : '' %>>Publication automatique</option>
+              </select>
+              <p class="hint">En mode « brouillon », les articles générés apparaissent dans le blog admin pour validation avant publication.</p>
+            </div>
+
+            <div class="field" style="margin-bottom:1.25rem">
+              <label>Planning (cron)</label>
+              <input type="text" name="cronSchedule" value="<%= config.cronSchedule %>" placeholder="0 8,18 * * *">
+              <p class="hint">Format cron. <code>0 8,18 * * *</code> = 2 fois par jour (8h et 18h).</p>
+            </div>
+
+            <div class="field" style="margin-bottom:1.25rem">
+              <label>Modèle IA</label>
+              <select name="aiModel">
+                <option value="gpt-4o-mini" <%= config.aiModel === 'gpt-4o-mini' ? 'selected' : '' %>>GPT-4o mini (rapide, économique)</option>
+                <option value="gpt-4o" <%= config.aiModel === 'gpt-4o' ? 'selected' : '' %>>GPT-4o (meilleure qualité)</option>
+                <option value="gpt-4.1-mini" <%= config.aiModel === 'gpt-4.1-mini' ? 'selected' : '' %>>GPT-4.1 mini</option>
+                <option value="gpt-4.1" <%= config.aiModel === 'gpt-4.1' ? 'selected' : '' %>>GPT-4.1</option>
+              </select>
+            </div>
+
+            <div class="field" style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
+              <label class="toggle-switch">
+                <input type="checkbox" name="roomArticles" <%= config.roomArticles ? 'checked' : '' %>>
+                <span class="toggle-slider"></span>
+              </label>
+              <div>
+                <strong>Articles depuis les chambres</strong>
+                <p class="hint">Génère un article descriptif pour chaque chambre qui n'en a pas encore.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-card" style="margin-top:1.5rem">
+            <h2 class="settings-section-title">Flux RSS — Veille tourisme</h2>
+            <p class="hint" style="margin-bottom:1rem">Ajoutez des flux RSS sur le tourisme. L'IA récupère les articles et les reformule de façon unique et SEO.</p>
+
+            <div class="feed-list" id="feedList">
+              <% const feeds = config.rssFeeds || []; %>
+              <% feeds.forEach((feed, i) => { %>
+              <div class="feed-item" data-index="<%= i %>">
+                <span class="feed-name"><%= feed.name %></span>
+                <span class="feed-url"><%= feed.url %></span>
+                <button type="button" class="feed-remove" onclick="removeFeed(<%= i %>)" title="Supprimer">✕</button>
+              </div>
+              <% }) %>
+            </div>
+
+            <div class="add-feed-row">
+              <input type="text" id="feedName" placeholder="Nom (ex: Togo Tourisme)" style="max-width:180px">
+              <input type="url" id="feedUrl" placeholder="URL du flux RSS">
+              <button type="button" class="btn-admin-outline btn-sm" onclick="addFeed()">+ Ajouter</button>
+            </div>
+
+            <input type="hidden" name="rssFeeds" id="rssFeedsInput" value='<%= JSON.stringify(feeds) %>'>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+          <div class="settings-card">
+            <h2 class="settings-section-title">CTA en pied d'article</h2>
+            <div class="field" style="margin-bottom:1rem">
+              <label>Texte d'appel à l'action</label>
+              <textarea name="ctaText" rows="3" placeholder="Envie de découvrir le Togo ?"><%= config.ctaText %></textarea>
+            </div>
+            <div class="field">
+              <label>Lien du bouton</label>
+              <input type="text" name="ctaLink" value="<%= config.ctaLink %>" placeholder="/chambres">
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h2 class="settings-section-title">Actions</h2>
+            <div class="form-actions" style="flex-direction:column;gap:0.75rem">
+              <button type="submit" class="btn-admin-primary btn-full">Enregistrer la configuration</button>
+              <button type="button" class="btn-test" onclick="testAPI()" id="btnTest">Tester la connexion API</button>
+              <div id="testResult" style="font-size:0.82rem;display:none"></div>
+            </div>
+
+            <hr class="section-sep">
+
+            <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.75rem">Lancer une génération maintenant (hors planning) :</p>
+            <button type="button" class="btn-generate" onclick="generateNow()" id="btnGenerate" <%= !hasApiKey ? 'disabled' : '' %>>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Générer maintenant
+            </button>
+            <div class="gen-result" id="genResult"></div>
+          </div>
+
+          <% if (config.lastRunLog) { %>
+          <div class="settings-card">
+            <h2 class="settings-section-title">Dernier résultat</h2>
+            <p style="font-size:0.85rem"><%= config.lastRunLog %></p>
+            <p class="hint"><%= config.lastRunAt ? new Date(config.lastRunAt).toLocaleString('fr-FR') : '' %></p>
+          </div>
+          <% } %>
+
+        </div>
+      </div>
+    </form>
+
+    <% if (logs.length) { %>
+    <div class="settings-card" style="margin-top:2rem">
+      <h2 class="settings-section-title">Historique de génération</h2>
+      <div class="table-wrap">
+        <table class="admin-table log-table">
+          <thead><tr><th>Date</th><th>Action</th><th>Source</th><th>Détails</th><th>Statut</th></tr></thead>
+          <tbody>
+            <% logs.forEach(l => { %>
+            <tr>
+              <td><%= new Date(l.createdAt).toLocaleString('fr-FR') %></td>
+              <td><%= l.action %></td>
+              <td><%= l.source || '—' %></td>
+              <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<%= l.details %>"><%= l.details %></td>
+              <td><span class="<%= l.success ? 'log-ok' : 'log-err' %>"><%= l.success ? 'OK' : 'Erreur' %></span></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <% } %>
+
+  </div>
+</main>
+
+<script src="/js/admin.js"></script>
+<script>
+let feeds = <%= JSON.stringify(config.rssFeeds || []) %>;
+
+function renderFeeds() {
+  const list = document.getElementById('feedList');
+  list.innerHTML = feeds.map((f, i) => `
+    <div class="feed-item">
+      <span class="feed-name">${f.name}</span>
+      <span class="feed-url">${f.url}</span>
+      <button type="button" class="feed-remove" onclick="removeFeed(${i})" title="Supprimer">✕</button>
+    </div>
+  `).join('');
+  document.getElementById('rssFeedsInput').value = JSON.stringify(feeds);
+}
+
+function addFeed() {
+  const name = document.getElementById('feedName').value.trim();
+  const url = document.getElementById('feedUrl').value.trim();
+  if (!name || !url) return alert('Nom et URL requis.');
+  feeds.push({ name, url });
+  document.getElementById('feedName').value = '';
+  document.getElementById('feedUrl').value = '';
+  renderFeeds();
+}
+
+function removeFeed(i) {
+  feeds.splice(i, 1);
+  renderFeeds();
+}
+
+async function testAPI() {
+  const btn = document.getElementById('btnTest');
+  const el = document.getElementById('testResult');
+  btn.disabled = true;
+  btn.textContent = 'Test en cours…';
+  el.style.display = 'none';
+  try {
+    const resp = await fetch('/admin/blog/auto/test', { method: 'POST' });
+    const data = await resp.json();
+    el.style.display = 'block';
+    if (data.ok) {
+      el.innerHTML = '<span style="color:#166534">Connexion réussie — modèle : ' + data.model + '</span>';
+    } else {
+      el.innerHTML = '<span style="color:#991b1b">Erreur : ' + data.error + '</span>';
+    }
+  } catch (e) {
+    el.style.display = 'block';
+    el.innerHTML = '<span style="color:#991b1b">Erreur réseau</span>';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Tester la connexion API';
+}
+
+async function generateNow() {
+  const btn = document.getElementById('btnGenerate');
+  const el = document.getElementById('genResult');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Génération en cours…';
+  el.style.display = 'none';
+  try {
+    const resp = await fetch('/admin/blog/auto/generate', { method: 'POST' });
+    const data = await resp.json();
+    el.style.display = 'block';
+    if (data.ok) {
+      const rss = data.rss ? data.rss.generated : 0;
+      const rooms = data.rooms ? data.rooms.generated : 0;
+      const total = rss + rooms;
+      let html = `<strong>${total} article(s) généré(s)</strong>`;
+      if (rss) html += ` · ${rss} depuis RSS`;
+      if (rooms) html += ` · ${rooms} depuis chambres`;
+      const errs = [...(data.rss?.errors || []), ...(data.rooms?.errors || [])];
+      if (errs.length) html += '<br>' + errs.map(e => '<span style="color:#991b1b">' + e + '</span>').join('<br>');
+      el.className = 'gen-result ' + (errs.length ? 'gen-err' : 'gen-ok');
+      el.innerHTML = html;
+      if (total > 0) setTimeout(() => location.reload(), 2000);
+    } else {
+      el.className = 'gen-result gen-err';
+      el.innerHTML = '<strong>Erreur :</strong> ' + data.error;
+    }
+  } catch (e) {
+    el.style.display = 'block';
+    el.className = 'gen-result gen-err';
+    el.innerHTML = 'Erreur réseau : ' + e.message;
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Générer maintenant';
+}
+</script>
+</body>
+</html>
