@@ -11,10 +11,10 @@ Liste de travail du projet. Cases cochées = déjà fait (sur branche, non fusio
 
 ## 🔴 Sécurité (prioritaire)
 
-- [x] **Montant de paiement recalculé côté serveur** — un client pouvait payer un prix arbitraire (montant pris du navigateur). — branche `fix/paiement-securite`
-- [x] **Anti double-réservation** — aucune vérification que la chambre est libre sur les dates. — branche `fix/disponibilite`
+- [x] **Montant de paiement recalculé côté serveur** — un client pouvait payer un prix arbitraire (montant pris du navigateur). — branche `fix/paiement-securite` (rapatrié dans `preview/local`)
+- [x] **Anti double-réservation** — aucune vérification que la chambre est libre sur les dates. — branche `fix/disponibilite` (rapatrié dans `preview/local`)
 - [x] **Mot de passe admin en clair supprimé** — `Setting.adminPlain` (« stella2026 »). — branche `fix/mdp-admin-en-clair`
-- [ ] **Callback FedaPay à sécuriser** — il fait confiance au `status` passé dans l'URL sans revérifier la transaction auprès de l'API FedaPay.
+- [x] **Callback FedaPay sécurisé** — ne fait plus confiance au `status` de l'URL : vérifie le vrai statut via `Transaction.retrieve()` + correspondance de l'id de session. — branche `preview/local`
 - [ ] **Borner le nombre de voyageurs** par la capacité réelle de la chambre (`guests` non contrôlé).
 
 ## 📋 Demandes du responsable (note vocale)
@@ -24,7 +24,7 @@ Liste de travail du projet. Cases cochées = déjà fait (sur branche, non fusio
 - [x] **Harmoniser l'admin** — back-office aligné sur le terracotta (branche `feat/refonte`).
 - [x] **Pages résultat de paiement** (succès / annulation) — refondues (branche `feat/refonte`).
 - [x] **Gestion des champs (admin)** — éditeur structuré (checklist équipements + chips, liste dynamique composition, menu type de lit). — branche `feat/refonte`
-- [ ] **Intégration du paiement** — vérifier que FedaPay + PayPal fonctionnent bien de bout en bout.
+- [~] **Intégration du paiement** — code **sécurisé & vérifié en local** sur `preview/local` (montant recalculé serveur, callback FedaPay revérifié, anti-double-résa — tests 400/409 OK). ⛔ *Reste à tester une vraie transaction : besoin des clés **sandbox** FedaPay + PayPal dans `.env` (actuellement vides).*
 - [x] **Blog automatique (IA)** — infrastructure complète : branche `feat/blog-auto`
    - [x] Moteur de génération IA (`lib/blog-auto.js`) avec prompts anti-détection + SEO
    - [x] **Source 1 · Chambres** : génère un article descriptif par chambre (données DB)
