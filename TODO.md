@@ -32,8 +32,9 @@ Liste de travail du projet. Cases cochées = déjà fait (sur branche, non fusio
    - [x] **CTA en pied d'article** : personnalisable (texte + lien)
    - [x] **Back-office admin** : page `/admin/blog/auto` (config, flux RSS, logs, génération manuelle)
    - [x] **Mode de publication configurable** : brouillon (validation humaine) ou auto
-   - [x] Planificateur cron (node-cron), configurable depuis l'admin
+   - [x] Planificateur cron (node-cron), configurable depuis l'admin — **100 % automatique** (défaut : 8h & 18h chaque jour, aucune action manuelle requise)
    - [x] Test de connexion API intégré
+   - [x] **Visible depuis le site public** : section « Journal » sur l'accueil, lien dans le menu + pied de page, pages `/blog` ajoutées au `sitemap.xml`
    ⚠️ *Prêt à fonctionner — il suffit d'ajouter `OPENAI_API_KEY=sk-...` dans `.env`.*
 - [ ] **Google Search Console** — vérifier le site, soumettre le sitemap, suivre l'indexation. ⛔ *Bloqué : besoin que le site soit déployé en prod.*
 
