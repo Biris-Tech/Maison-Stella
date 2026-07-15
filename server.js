@@ -315,8 +315,61 @@ async function getPayPalToken() {
 }
 
 // XOF → EUR (taux fixe : 1 EUR = 655.957 XOF)
+const XOF_TO_EUR_RATE = 655.957; // taux fixe officiel XOF/EUR (zone CFA)
 function xofToEur(xof) {
-  return Math.ceil((xof / 655.957) * 100) / 100;
+  return Math.ceil((xof / XOF_TO_EUR_RATE) * 100) / 100;
+}
+
+// ─── PAIEMENT : calcul sécurisé du montant côté serveur ─────────────────────
+// Le montant à débiter ne doit JAMAIS venir du client : on le recalcule
+// toujours à partir du prix de la chambre en base × le nombre de nuits.
+
+// Calcule le nombre de nuits entre deux dates "YYYY-MM-DD". Retourne null
+// si les dates sont invalides ou si le séjour ne fait pas au moins 1 nuit.
+function computeNights(checkin, checkout) {
+  const inDate = new Date(checkin);
+  const outDate = new Date(checkout);
+  if (isNaN(inDate.getTime()) || isNaN(outDate.getTime())) return null;
+  const nights = Math.round((outDate - inDate) / 86400000);
+  if (!Number.isInteger(nights) || nights < 1) return null;
+  return nights;
+}
+
+// Récupère le prix fiable de la réservation (chambre active + nuits valides)
+// à partir des seules données de confiance (base + dates). Retourne null si
+// la demande n'est pas valide (chambre introuvable/inactive ou dates KO).
+async function computeVerifiedAmount(roomId, checkin, checkout) {
+  const nights = computeNights(checkin, checkout);
+  if (!nights) return null;
+  const room = await prisma.room.findFirst({ where: { id: roomId, active: true } });
+  if (!room) return null;
+  const totalAmountXOF = room.price * nights;
+  const amountEur = Math.round((totalAmountXOF / XOF_TO_EUR_RATE) * 100) / 100;
+  return { room, nights, totalAmountXOF, amountEur };
+}
+
+// ─── DISPONIBILITÉ (anti-double réservation) ─────────────────────────────────
+// Deux périodes [a, b) et [c, d) se chevauchent ssi a < d ET c < b. Les dates
+// sont des chaînes ISO "YYYY-MM-DD" : la comparaison lexicographique <, >
+// correspond exactement à l'ordre chronologique, pas besoin de parser en Date.
+// Seules les réservations "confirmed" (paiement encaissé) bloquent la chambre :
+// une "pending" correspond à un paiement initié mais jamais confirmé (callback
+// non reçu, paiement abandonné/échoué) et ne doit pas condamner la chambre
+// indéfiniment pour les clients suivants.
+async function isRoomAvailable(roomId, checkin, checkout, excludeBookingId) {
+  // Sans roomId on ne peut pas garantir l'absence de chevauchement (matching
+  // par nom de chambre non fiable) : on refuse prudemment plutôt que de risquer
+  // un doublon.
+  if (!roomId || !checkin || !checkout) return false;
+  const where = {
+    roomId,
+    status: "confirmed",
+    checkin: { lt: checkout },
+    checkout: { gt: checkin },
+  };
+  if (excludeBookingId) where.id = { not: excludeBookingId };
+  const conflict = await prisma.booking.findFirst({ where });
+  return !conflict;
 }
 
 // ─── PUBLIC ROUTES ────────────────────────────────────────────────────────────
@@ -430,17 +483,24 @@ app.post("/payment/fedapay/init", async (req, res) => {
     phone,
     email,
     guests,
-    nights,
-    totalAmount,
   } = req.body;
   try {
+    // Rejeter avant tout paiement si la chambre n'est plus disponible sur ces dates.
+    if (!(await isRoomAvailable(roomId, checkin, checkout))) {
+      return res.redirect("/payment/cancel?error=indisponible");
+    }
+    // Montant recalculé côté serveur — on ignore totalAmount envoyé par le client.
+    const verified = await computeVerifiedAmount(roomId, checkin, checkout);
+    if (!verified) return res.redirect("/payment/cancel?error=invalid");
+    const { nights, totalAmountXOF } = verified;
+
     FedaPay.setApiKey(process.env.FEDAPAY_SECRET_KEY);
     FedaPay.setEnvironment(process.env.FEDAPAY_ENV || "sandbox");
 
     const nameParts = (fullname || "Client").trim().split(" ");
     const transaction = await Transaction.create({
       description: `Réservation – ${room} · ${nights} nuit(s)`,
-      amount: parseInt(totalAmount),
+      amount: totalAmountXOF,
       currency: { iso: "XOF" },
       callback_url: `${BASE_URL}/payment/fedapay/callback`,
       customer: {
@@ -463,8 +523,8 @@ app.post("/payment/fedapay/init", async (req, res) => {
       phone,
       email,
       guests: parseInt(guests) || 1,
-      nights: parseInt(nights) || 1,
-      totalAmount: parseInt(totalAmount),
+      nights,
+      totalAmount: totalAmountXOF,
       paymentMethod: "fedapay",
     };
     req.session.fedapayTxId = transaction.id;
@@ -479,28 +539,65 @@ app.post("/payment/fedapay/init", async (req, res) => {
 
 // FedaPay – callback après paiement
 app.get("/payment/fedapay/callback", async (req, res) => {
-  const { id, status } = req.query;
+  const { id } = req.query;
   try {
     FedaPay.setApiKey(process.env.FEDAPAY_SECRET_KEY);
     FedaPay.setEnvironment(process.env.FEDAPAY_ENV || "sandbox");
 
-    if (status === "approved" && req.session.pendingBooking) {
-      const booking = req.session.pendingBooking;
-      await prisma.booking.create({
-        data: {
-          id: Date.now().toString(),
-          ...booking,
-          status: "confirmed",
-          paymentStatus: "paid",
-          paymentId: String(id),
-        },
-      });
+    if (!req.session.pendingBooking) {
+      return res.redirect("/payment/cancel?method=fedapay");
+    }
+
+    // SÉCURITÉ : ne JAMAIS se fier au « status » de l'URL (falsifiable). On
+    // interroge FedaPay pour connaître le vrai statut de la transaction, et on
+    // vérifie que l'id renvoyé correspond bien à celle qu'on a initiée.
+    const txId = id || req.session.fedapayTxId;
+    let transaction;
+    try {
+      transaction = await Transaction.retrieve(parseInt(txId, 10));
+    } catch (e) {
+      console.error("FedaPay retrieve error:", e.message);
+      return res.redirect("/payment/cancel?method=fedapay");
+    }
+    const paidStatuses = ["approved", "transferred"];
+    const realStatus = transaction && transaction.status;
+    const sameTx =
+      req.session.fedapayTxId &&
+      String(transaction.id) === String(req.session.fedapayTxId);
+
+    if (!sameTx || !paidStatuses.includes(realStatus)) {
+      return res.redirect("/payment/cancel?method=fedapay");
+    }
+
+    const booking = req.session.pendingBooking;
+
+    // Anti-collision de dernière minute : revérifier juste avant la création,
+    // au cas où une autre réservation aurait été confirmée entre l'init et ce callback.
+    if (!(await isRoomAvailable(booking.roomId, booking.checkin, booking.checkout))) {
+      // Le paiement FedaPay est déjà approuvé (fonds encaissés) : cas limite à
+      // traiter manuellement (remboursement/relogement), pas de remboursement auto ici.
+      console.error(
+        `Anti-collision FedaPay: chambre ${booking.roomId} déjà réservée pour ${booking.checkin} → ${booking.checkout} ` +
+          `(transaction FedaPay ${txId} approuvée mais réservation NON créée — remboursement/relogement manuel requis).`,
+      );
       req.session.pendingBooking = null;
       req.session.fedapayTxId = null;
-      sendBookingNotification({ ...booking, paymentMethod: "fedapay" }).catch(() => {});
-      return res.redirect("/payment/success?method=fedapay");
+      return res.redirect("/payment/cancel?error=indisponible_apres_paiement");
     }
-    res.redirect("/payment/cancel?method=fedapay");
+
+    await prisma.booking.create({
+      data: {
+        id: Date.now().toString(),
+        ...booking,
+        status: "confirmed",
+        paymentStatus: "paid",
+        paymentId: String(transaction.id),
+      },
+    });
+    req.session.pendingBooking = null;
+    req.session.fedapayTxId = null;
+    sendBookingNotification({ ...booking, paymentMethod: "fedapay" }).catch(() => {});
+    return res.redirect("/payment/success?method=fedapay");
   } catch (err) {
     console.error("FedaPay callback error:", err);
     res.redirect("/payment/cancel?error=1");
@@ -510,7 +607,15 @@ app.get("/payment/fedapay/callback", async (req, res) => {
 // PayPal – créer un ordre
 app.post("/payment/paypal/create-order", async (req, res) => {
   try {
-    const { amountEur } = req.body;
+    const { roomId, checkin, checkout } = req.body;
+    // Rejeter avant tout paiement si la chambre n'est plus disponible sur ces dates.
+    if (!(await isRoomAvailable(roomId, checkin, checkout))) {
+      return res.status(409).json({ error: "Chambre indisponible sur ces dates" });
+    }
+    // Montant recalculé côté serveur — on ignore amountEur envoyé par le client.
+    const verified = await computeVerifiedAmount(roomId, checkin, checkout);
+    if (!verified) return res.status(400).json({ error: "Réservation invalide" });
+
     const token = await getPayPalToken();
     const response = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
       method: "POST",
@@ -522,7 +627,7 @@ app.post("/payment/paypal/create-order", async (req, res) => {
         intent: "CAPTURE",
         purchase_units: [
           {
-            amount: { currency_code: "EUR", value: String(amountEur) },
+            amount: { currency_code: "EUR", value: String(verified.amountEur) },
             description: "Maison Stella – Réservation chambre",
           },
         ],
@@ -548,10 +653,13 @@ app.post("/payment/paypal/capture", async (req, res) => {
     phone,
     email,
     guests,
-    nights,
-    totalAmount,
   } = req.body;
   try {
+    // Montant recalculé côté serveur — on ignore totalAmount envoyé par le client.
+    const verified = await computeVerifiedAmount(roomId, checkin, checkout);
+    if (!verified) return res.status(400).json({ success: false, error: "Réservation invalide" });
+    const { nights, totalAmountXOF } = verified;
+
     const token = await getPayPalToken();
     const response = await fetch(
       `${PAYPAL_BASE}/v2/checkout/orders/${orderID}/capture`,
@@ -566,6 +674,18 @@ app.post("/payment/paypal/capture", async (req, res) => {
     const capture = await response.json();
 
     if (capture.status === "COMPLETED") {
+      // Anti-collision de dernière minute : revérifier juste avant la création,
+      // au cas où une autre réservation aurait été confirmée entre la création
+      // de l'ordre et sa capture.
+      if (!(await isRoomAvailable(roomId, checkin, checkout))) {
+        // Le paiement PayPal est déjà capturé (fonds encaissés) : cas limite à
+        // traiter manuellement (remboursement), pas de remboursement auto ici.
+        console.error(
+          `Anti-collision PayPal: chambre ${roomId} déjà réservée pour ${checkin} → ${checkout} ` +
+            `(ordre PayPal ${orderID} capturé mais réservation NON créée — remboursement/relogement manuel requis).`,
+        );
+        return res.status(409).json({ success: false, error: "Chambre indisponible sur ces dates. Paiement capturé — contactez-nous pour un remboursement." });
+      }
       await prisma.booking.create({
         data: {
           id: Date.now().toString(),
@@ -577,15 +697,15 @@ app.post("/payment/paypal/capture", async (req, res) => {
           phone,
           email,
           guests: parseInt(guests) || 1,
-          nights: parseInt(nights) || 1,
-          totalAmount: parseInt(totalAmount),
+          nights,
+          totalAmount: totalAmountXOF,
           status: "confirmed",
           paymentMethod: "paypal",
           paymentStatus: "paid",
           paymentId: orderID,
         },
       });
-      sendBookingNotification({ room, checkin, checkout, fullname, phone, email, guests: parseInt(guests) || 1, nights: parseInt(nights) || 1, totalAmount: parseInt(totalAmount), paymentMethod: "paypal" }).catch(() => {});
+      sendBookingNotification({ room, checkin, checkout, fullname, phone, email, guests: parseInt(guests) || 1, nights, totalAmount: totalAmountXOF, paymentMethod: "paypal" }).catch(() => {});
       res.json({ success: true });
     } else {
       res.json({ success: false, error: "Paiement non complété" });
