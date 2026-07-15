@@ -52,18 +52,7 @@
 <body>
 
 <!-- NAV -->
-<nav class="nav" id="nav">
-  <div class="nav-in">
-    <a href="/" class="brand"><img src="/image/logo.png" alt="<%= settings.siteName %>" class="brand-logo"><span class="brand-word">Maison&nbsp;<b>Stella</b><span class="dot">.</span></span></a>
-    <div class="nav-links">
-      <a href="#maison">La maison</a>
-      <a href="#chambres">Chambres</a>
-      <a href="#experience">L'expérience</a>
-      <a href="#contact">Contact</a>
-    </div>
-    <a href="#booking" class="nav-cta">Réserver</a>
-  </div>
-</nav>
+<%- include('partials/site-nav', { settings }) %>
 
 <!-- HERO -->
 <header class="hero">
@@ -182,6 +171,42 @@
   </div>
 </section>
 
+<!-- JOURNAL -->
+<% if (posts && posts.length) { %>
+<section class="section" id="journal">
+  <div class="wrap">
+    <div class="ch-head">
+      <div>
+        <p class="label kicker reveal">Le journal</p>
+        <h2 class="reveal">Avant de <em>partir</em></h2>
+      </div>
+      <a href="/blog" class="ch-link reveal">Tous les articles <span>→</span></a>
+    </div>
+
+    <div class="blog-grid">
+      <% posts.forEach(post => { %>
+      <a href="/blog/<%= post.slug %>" class="blog-card reveal">
+        <div class="blog-card-img">
+          <img src="/image/<%= encodeURIComponent(post.coverImage || settings.heroImage) %>" alt="<%= post.title %>" loading="lazy">
+        </div>
+        <div class="blog-card-body">
+          <% if (post.tags && post.tags.length) { %>
+          <div class="blog-tags"><% post.tags.slice(0,2).forEach(t => { %><span class="blog-tag"><%= t %></span><% }) %></div>
+          <% } %>
+          <h3 class="blog-card-title"><%= post.title %></h3>
+          <% if (post.excerpt) { %><p class="blog-card-excerpt"><%= post.excerpt %></p><% } %>
+          <div class="blog-card-foot">
+            <span><%= post.authorName %></span>
+            <span><%= new Date(post.publishedAt).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' }) %></span>
+          </div>
+        </div>
+      </a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+
 <!-- CTA -->
 <section class="section cta">
   <div class="wrap">
@@ -236,36 +261,7 @@
 </section>
 
 <!-- FOOTER -->
-<footer>
-  <div class="wrap">
-    <div class="foot-word reveal">Restez une nuit,<br>repartez <em>ailleurs</em>.</div>
-    <div class="foot-grid">
-      <div class="foot-brand">
-        <a href="/" class="brand"><img src="/image/logo.png" alt="<%= settings.siteName %>" class="brand-logo"><span class="brand-word">Maison&nbsp;<b>Stella</b><span class="dot">.</span></span></a>
-        <p><%= settings.tagline %> — Avepozo, au bord du lac, Lomé (Togo).</p>
-      </div>
-      <div class="foot-col">
-        <h5>Naviguer</h5>
-        <a href="#maison">La maison</a>
-        <a href="#chambres">Chambres</a>
-        <a href="#experience">L'expérience</a>
-        <a href="/chambres">Réserver</a>
-      </div>
-      <div class="foot-col">
-        <h5>Nous trouver</h5>
-        <p><%= settings.address %></p>
-        <a href="tel:<%= settings.phone.replace(/\s/g,'') %>"><%= settings.phone %></a>
-        <a href="https://www.airbnb.fr/users/profile/1470333770914956183" target="_blank" rel="noopener">Airbnb</a>
-        <a href="https://www.instagram.com/maisonstellalome/" target="_blank" rel="noopener">Instagram</a>
-        <a href="https://www.tiktok.com/@maisonstellalome" target="_blank" rel="noopener">TikTok</a>
-      </div>
-    </div>
-    <div class="foot-bot">
-      <span>© <%= new Date().getFullYear() %> <%= settings.siteName %></span>
-      <span>Avepozo · Lomé · Togo</span>
-    </div>
-  </div>
-</footer>
+<%- include('partials/site-footer', { settings }) %>
 
 <script>
   // reveals

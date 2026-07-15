@@ -332,11 +332,18 @@ app.get("/sitemap.xml", async (_req, res) => {
     rooms = await prisma.room.findMany({ where: { active: true } });
     cacheSet("rooms:all", rooms);
   }
+  const posts = await prisma.blogPost.findMany({
+    where: { status: "published" },
+    select: { slug: true, updatedAt: true },
+    orderBy: { publishedAt: "desc" },
+  });
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>${BASE_URL}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
   <url><loc>${BASE_URL}/chambres</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
   ${rooms.map((r) => `<url><loc>${BASE_URL}/chambre/${r.id}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`).join("\n  ")}
+  <url><loc>${BASE_URL}/blog</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  ${posts.map((p) => `<url><loc>${BASE_URL}/blog/${p.slug}</loc><lastmod>${new Date(p.updatedAt).toISOString().slice(0, 10)}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>`).join("\n  ")}
 </urlset>`;
   res.set("Content-Type", "application/xml");
   res.set("Cache-Control", "public, max-age=3600");
@@ -355,7 +362,12 @@ app.get("/", async (_req, res) => {
     cacheSet("rooms:all", rooms);
   }
   const featured = rooms.filter((r) => r.featured).slice(0, 3);
-  res.render("index", { rooms, featured, settings, page: "home" });
+  const posts = await prisma.blogPost.findMany({
+    where: { status: "published" },
+    orderBy: { publishedAt: "desc" },
+    take: 3,
+  });
+  res.render("index", { rooms, featured, posts, settings, page: "home" });
 });
 
 // Recherche du hero : on ne garde que des valeurs propres, à propager dans le tunnel.
